@@ -1,0 +1,6 @@
+{
+  "name": "あろはーず公式ホームページ",
+  "description": "女性2人組の踊ってみたユニット「あろはーず」のファン向け公式ホームページ。キャンディポップで平成レトロを感じる、見てるだけで楽しい遊び心あふれる世界観。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
