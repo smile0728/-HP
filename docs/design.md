@@ -10,7 +10,8 @@
 - アイコン: `lucide-react`
 - 紙吹雪演出: `canvas-confetti`
 - 音声: Web Audio API
-- 永続化: ブラウザ `localStorage`
+- 認証/DB: Firebase Authentication, Cloud Firestore
+- 永続化: Firestore, ブラウザ `localStorage`
 
 ## アプリ構造
 
@@ -22,6 +23,8 @@ src/
   index.css
   main.tsx
   components/
+    AdminPanel.tsx
+    Announcements.tsx
     CursorSparks.tsx
     ExchangeDiary.tsx
     FortuneGame.tsx
@@ -29,9 +32,14 @@ src/
     LoadingScreen.tsx
     MusicPlayer.tsx
     ProfileCards.tsx
+  lib/
+    firebase.ts
   assets/images/
     alohaz_main_1779675458356.png
     alohaz_logo_1779675480937.png
+firebase-applet-config.json
+firebase-blueprint.json
+firestore.rules
 ```
 
 ## データ設計
@@ -105,6 +113,17 @@ src/
 - `ratingSmile`
 - `ratingCaramel`
 
+### Firestore 管理データ
+
+`src/lib/firebase.ts` では、公開画面と管理画面で使う Firestore データ型を定義する。
+
+- `PhotoEntry`: 写真 ID、画像 URL、タイトル、日付、コメント、公開状態
+- `DiaryRecord`: 日記 ID、日付、著者、タイトル、本文、返信、ステッカー配列、公開状態
+- `AnnouncementEntry`: お知らせ ID、タイトル、本文、日付、公開状態
+- `GachaFortune`: ガチャ ID、季節、タイトル、結果名、結果メッセージ、画像 URL、レアリティ、開始日、終了日、表示順、公開状態など
+- `SeasonLetter`: 手紙 ID、季節、タイトル、本文、著者、画像 URL、開始日、終了日、公開状態など
+- `DailyStat`: 日付 ID、ページビュー、ガチャ回数、コンプリート数、ギャラリー閲覧、SNSクリック、動画クリック
+
 ## 画面構成
 
 ### App
@@ -113,12 +132,14 @@ src/
 
 主な責務:
 
+- `/admin` パス判定と `AdminPanel` 表示
 - ローディング画面の表示制御
 - スクロールナビゲーション
 - ヒーロー、動画、プロフィール、日記、ギャラリー、ガチャの配置
 - ロゴ連打による隠しモーダル制御
 - 動画選択と動画推し数の一時状態管理
 - キャンディ雨とクリック効果音の発火
+- ファンホームページ表示時のページビュー計測
 
 主な state:
 
@@ -129,6 +150,45 @@ src/
 - `videoLikes`
 - `hasLikedVideo`
 - `fallingCandies`
+
+### Announcements
+
+公開中のお知らせを表示する。
+
+- `getAnnouncements()` から公開お知らせを取得
+- データが空の場合は何も描画しない
+- 一覧クリックで詳細モーダルを表示
+- 詳細表示時に Web Audio API で短い効果音を鳴らす
+
+### AdminPanel
+
+運営管理室を提供する。
+
+- `/admin` で `App` から直接表示される
+- Firebase Auth の `onAuthStateChanged` でログイン状態を監視
+- Google ログイン後、Firestore の `admins/{uid}` ドキュメントが存在しないユーザーはサインアウトする
+- `isMockFirebase` の場合は模擬管理者ログインを許可する
+- 認証状態の確認中はローディング表示を出す
+- 権限チェック失敗やログイン失敗時はログイン画面にエラーを表示する
+- 認証後、以下のデータを並列取得する
+  - 写真
+  - 日記
+  - お知らせ
+  - ガチャ
+  - 手紙
+  - 日次統計
+- 各タブのフォームから `save*` / `delete*` API を呼び出す
+- 変更後は `refreshData()` で管理画面の一覧を再取得する
+- 主要な管理フォームは公開/非公開フラグを持ち、公開画面は `visible` なデータだけを表示する
+
+管理画面のタブ構成:
+
+- `dashboard`: 日次統計、登録件数、簡易グラフを表示
+- `announcements`: お知らせの作成、編集、削除、公開/非公開
+- `diary`: 交換日記の作成、編集、削除、公開/非公開
+- `photos`: アルバム写真の作成、編集、削除、公開/非公開
+- `gacha`: おみくじ結果定義の作成、編集、削除、公開/非公開
+- `letters`: コンプリート手紙定義の作成、編集、削除、公開/非公開
 
 ### LoadingScreen
 
@@ -168,7 +228,7 @@ Web Audio API による簡易 8bit プレイヤー。
 
 交換日記とファン付箋コメント機能。
 
-- 初期日記は `INITIAL_DIARY`
+- 日記本文は `getDiaries()` から取得
 - コメントは `localStorage` の `alohaz_diary_comments` から復元
 - 保存データがない場合は初期コメント2件を投入
 - 投稿時は選択中日記 ID に紐づくコメントを先頭追加
@@ -178,10 +238,10 @@ Web Audio API による簡易 8bit プレイヤー。
 
 スクラップブック風アルバム。
 
-- `GALLERY_PHOTOS` を `ALBUM_PHOTOS` に拡張し、カテゴリー、説明文、ステッカーを付与
+- `getPhotos()` から写真を取得し、表示用にカテゴリー、説明文、ステッカー、回転角を付与
 - `activeTab` でカテゴリー絞り込み
 - `selectedPhotoIndex` でライトボックス表示を制御
-- 前後移動は `ALBUM_PHOTOS` 全体を循環する
+- 前後移動は取得済みの `photos` 配列全体を循環する
 
 ### FortuneGame
 
@@ -263,6 +323,8 @@ Google Fonts から以下を読み込む。
 
 ## 永続化設計
 
+### localStorage
+
 | キー | 内容 |
 | --- | --- |
 | `alohaz_diary_comments` | 交換日記のファンコメント配列 |
@@ -270,6 +332,30 @@ Google Fonts から以下を読み込む。
 | `alohaz_today_fortune` | 当日の `FortuneResult` |
 | `alohaz_gacha_collection` | 収集済み `luckLevel` 配列 |
 | `alohaz_visitor_name` | コンプリートレターの宛名 |
+| `alohaz_firestore_*` | Firestore フォールバック用の各コレクション |
+
+### Firestore
+
+| コレクション | 用途 |
+| --- | --- |
+| `photos` | ギャラリー写真 |
+| `diaries` | 交換日記本文 |
+| `announcements` | お知らせ |
+| `fortunes` | 管理対象ガチャ結果 |
+| `letters` | 季節/コンプリート手紙 |
+| `daily_stats` | 日次テレメトリー |
+| `admins` | 管理者 UID |
+
+`src/lib/firebase.ts` は各コレクションに対して以下の操作関数を提供する。
+
+- 写真: `getPhotos`, `savePhoto`, `deletePhoto`
+- 日記: `getDiaries`, `saveDiary`, `deleteDiary`
+- お知らせ: `getAnnouncements`, `saveAnnouncement`, `deleteAnnouncement`
+- おみくじ: `getFortunes`, `saveFortune`, `deleteFortune`
+- 手紙: `getLetters`, `saveLetter`, `deleteLetter`
+- 統計: `logTelemetryEvent`, `getDailyStats`
+
+Firebase がモック設定、または Firestore 読み込みに失敗した場合は `alohaz_firestore_` 接頭辞の `localStorage` データを使用する。
 
 ## 外部依存とリソース
 
@@ -280,22 +366,31 @@ Google Fonts から以下を読み込む。
   - `picsum.photos` の動画サムネイル、ギャラリー画像
 - 外部フォント:
   - Google Fonts
+- Firebase:
+  - `firebase-applet-config.json` の Firebase プロジェクト設定
+  - `firestore.rules` のセキュリティルール
 
 ## エラーハンドリング
 
 - `localStorage` の JSON parse 失敗時は例外を握りつぶし、初期値に戻す。
 - Web Audio API の実行失敗は `try/catch` で無視する。
 - Canvas 画像生成失敗時は `console.error` に出力し、生成中状態を解除する。
+- Firestore 操作失敗時は `handleFirestoreError()` で操作種別、パス、認証情報を JSON 化してログ出力する。
+- 一部の読み書きは Firebase 失敗時に `localStorage` フォールバックを使う。
 
 ## セキュリティとプライバシー
 
 - ユーザー入力は React の通常レンダリングで表示されるため、HTML としては解釈されない。
 - コメント、訪問者名はブラウザ内にのみ保存される。
-- サーバー送信、認証、個人情報管理は行わない。
+- 管理画面は Firebase Authentication の Google ログインで保護する。
+- Firestore ルールでは `admins/{uid}` の存在で管理者判定を行い、管理者メールはコードにもルールにも含めない。
+- 初期管理者は Firebase Console などから `admins/{uid}` を作成して登録する必要がある。
+- `admins/{uid}` は本人または管理者が個別取得でき、一覧取得と書き込みは管理者に限定する。
+- Firebase の API キーはクライアント設定として含まれるため、アクセス制御は Firestore ルール側で担保する。
 
 ## 実装上の注意点
 
 - Vite の `server.hmr` は `DISABLE_HMR` 環境変数で制御される。
 - `vite.config.ts` には `@` エイリアスがプロジェクトルートとして定義されている。
 - `metadata.json` には Gemini API の capability が記載されているが、現状の画面コードでは Gemini 呼び出しは確認できない。
-- `.env.example` は存在するが、現状の UI 挙動では API キー必須処理は見当たらない。
+- `react-router-dom` は依存に追加されているが、現状のルーティングは `window.location.pathname` と `history.pushState` による簡易実装である。

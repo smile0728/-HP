@@ -23,6 +23,9 @@ import MusicPlayer from './components/MusicPlayer';
 import ExchangeDiary from './components/ExchangeDiary';
 import Gallery from './components/Gallery';
 import FortuneGame from './components/FortuneGame';
+import Announcements from './components/Announcements';
+import AdminPanel from './components/AdminPanel';
+import { logTelemetryEvent } from './lib/firebase';
 
 // Data
 import { DANCE_VIDEOS } from './data';
@@ -33,6 +36,30 @@ const MainVisualImg = "/src/assets/images/alohaz_main_1779675458356.png";
 const LogoImg = "/src/assets/images/alohaz_logo_1779675480937.png";
 
 export default function App() {
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    const poller = setInterval(() => {
+      if (window.location.pathname !== currentPath) {
+        setCurrentPath(window.location.pathname);
+      }
+    }, 500);
+
+    // Track pageView event if active path is fan homepage
+    if (!window.location.pathname.startsWith('/admin')) {
+      logTelemetryEvent('pageViews').catch(() => {});
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      clearInterval(poller);
+    };
+  }, [currentPath]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [logoClicks, setLogoClicks] = useState(0);
   const [showSecret, setShowSecret] = useState(false);
@@ -135,6 +162,10 @@ export default function App() {
       } catch (_) {}
     }
   };
+
+  if (currentPath.startsWith('/admin')) {
+    return <AdminPanel />;
+  }
 
   return (
     <div className="min-h-screen text-dark-charcoal dotted-bg font-sans scroll-smooth relative select-none">
@@ -361,6 +392,11 @@ export default function App() {
             </div>
           </section>
 
+          {/* Dynamic Bulletins Board */}
+          <section id="announcements" className="w-full flex justify-center max-w-4xl mx-auto py-2">
+            <Announcements />
+          </section>
+
           {/* Section ② LATEST VIDEO & CASSETTE AUDIO COLUMN */}
           <section id="videos" className="bg-brand-orange/10 border-4 border-dark-charcoal p-6 rounded-3xl shadow-[6px_6px_0_#4A3E3D] relative flex flex-col md:flex-row gap-8 items-center md:items-stretch">
             
@@ -541,6 +577,16 @@ export default function App() {
             <div className="text-[10px] font-mono font-bold text-dark-charcoal/50 uppercase leading-snug">
               © 2026 ALOHA-Z CANDY POP THEMEPARK WEB SITE. <br className="md:hidden"/> All rights reserved (すまいる & きゃらめる).
             </div>
+
+            <button 
+              onClick={() => {
+                window.history.pushState(null, '', '/admin');
+                setCurrentPath('/admin');
+              }}
+              className="text-[10px] font-bold text-dark-charcoal/30 hover:text-brand-orange hover:underline transition-colors cursor-pointer mt-1"
+            >
+              ⚙️ 運営管理室ログインはこちら
+            </button>
           </footer>
 
         </main>

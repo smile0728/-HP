@@ -12,17 +12,37 @@ const COLOR_STYLES = {
   blue: 'bg-sky-100 border-sky-300 text-sky-800 rotate-[1deg]',
 };
 
+import { getDiaries } from '../lib/firebase';
+
 export default function ExchangeDiary() {
-  const [entries, setEntries] = useState<DiaryEntry[]>(INITIAL_DIARY);
-  const [selectedEntryId, setSelectedEntryId] = useState<string>(INITIAL_DIARY[0].id);
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [selectedEntryId, setSelectedEntryId] = useState<string>('');
   const [comments, setComments] = useState<FanComment[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Custom Input Fields for Guestbook
   const [nickname, setNickname] = useState('');
   const [bgColor, setBgColor] = useState<'pink' | 'yellow' | 'orange' | 'green' | 'blue'>('pink');
   const [bodyText, setBodyText] = useState('');
 
-  const activeEntry = entries.find((e) => e.id === selectedEntryId) || entries[0];
+  // Fetch from Firebase/Store
+  useEffect(() => {
+    getDiaries()
+      .then((data) => {
+        setEntries(data);
+        if (data.length > 0) {
+          setSelectedEntryId(data[0].id);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Diary load error:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const activeEntry = entries.find((e) => e.id === selectedEntryId) || entries[0] || null;
+
 
   // Retrieve comments on mount
   useEffect(() => {
@@ -108,6 +128,26 @@ export default function ExchangeDiary() {
 
   // Filter comments belonging to active notebook entry
   const activeComments = comments.filter((c) => c.diaryId === selectedEntryId);
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-12 rounded-3xl arcade-border relative flex flex-col items-center justify-center min-h-[350px]">
+        <div className="text-dark-charcoal text-sm font-black animate-pulse flex items-center gap-2">
+          📓 交換日記をひらいています...🧸
+        </div>
+      </div>
+    );
+  }
+
+  if (entries.length === 0 || !activeEntry) {
+    return (
+      <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-12 rounded-3xl arcade-border relative flex flex-col items-center justify-center min-h-[350px]">
+        <div className="text-dark-charcoal text-sm font-black">
+          📓 交換日記はまだ書かれていません。これからお楽しみに！🌻
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-6 rounded-3xl arcade-border relative flex flex-col gap-6">

@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entities Validations
+    function isValidPhoto(data) {
+      return data.keys().hasAll(['id', 'imageUrl', 'title', 'date', 'visible']) &&
+             data.keys().size() <= 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.imageUrl is string && data.imageUrl.size() <= 100000 &&
+             data.title is string && data.title.size() <= 128 &&
+             data.date is string && data.date.size() <= 32 &&
+             data.visible is bool &&
+             (!data.keys().hasAny(['comment']) || (data.comment is string && data.comment.size() <= 1000));
+    }
+
+    function isValidDiary(data) {
+      return data.keys().hasAll(['id', 'author', 'content', 'date', 'visible']) &&
+             data.keys().size() <= 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.author is string && (data.author == 'smile' || data.author == 'caramel') &&
+             data.content is string && data.content.size() <= 10000 &&
+             data.date is string && data.date.size() <= 32 &&
+             data.visible is bool;
+    }
+
+    function isValidAnnouncement(data) {
+      return data.keys().hasAll(['id', 'title', 'content', 'date', 'visible']) &&
+             data.keys().size() <= 7 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.content is string && data.content.size() <= 10000 &&
+             data.date is string && data.date.size() <= 32 &&
+             data.visible is bool;
+    }
+
+    function isValidFortune(data) {
+      return data.keys().hasAll(['id', 'season', 'title', 'resultName', 'resultMessage', 'visible', 'sortOrder']) &&
+             data.keys().size() <= 13 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.season is string && data.season.size() <= 64 &&
+             data.title is string && data.title.size() <= 128 &&
+             data.resultName is string && data.resultName.size() <= 32 &&
+             data.resultMessage is string && data.resultMessage.size() <= 1000 &&
+             data.visible is bool &&
+             data.sortOrder is int &&
+             (!data.keys().hasAny(['imageUrl']) || (data.imageUrl is string && data.imageUrl.size() <= 100000)) &&
+             (!data.keys().hasAny(['rarity']) || (data.rarity is string && data.rarity.size() <= 32)) &&
+             (!data.keys().hasAny(['startDate']) || (data.startDate is string && data.startDate.size() <= 32)) &&
+             (!data.keys().hasAny(['endDate']) || (data.endDate is string && data.endDate.size() <= 32));
+    }
+
+    function isValidLetter(data) {
+      return data.keys().hasAll(['id', 'season', 'title', 'content', 'author', 'visible']) &&
+             data.keys().size() <= 10 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.season is string && data.season.size() <= 64 &&
+             data.title is string && data.title.size() <= 128 &&
+             data.content is string && data.content.size() <= 10000 &&
+             data.author is string && (data.author == 'smile' || data.author == 'caramel' || data.author == 'alohaz') &&
+             data.visible is bool &&
+             (!data.keys().hasAny(['imageUrl']) || (data.imageUrl is string && data.imageUrl.size() <= 100000)) &&
+             (!data.keys().hasAny(['startDate']) || (data.startDate is string && data.startDate.size() <= 32)) &&
+             (!data.keys().hasAny(['endDate']) || (data.endDate is string && data.endDate.size() <= 32));
+    }
+
+    function isValidDailyStat(data) {
+      return data.keys().size() <= 8 &&
+             (!data.keys().hasAny(['pageViews']) || data.pageViews is int) &&
+             (!data.keys().hasAny(['fortunesDrawn']) || data.fortunesDrawn is int) &&
+             (!data.keys().hasAny(['completions']) || data.completions is int) &&
+             (!data.keys().hasAny(['galleryViews']) || data.galleryViews is int) &&
+             (!data.keys().hasAny(['snsClicks']) || data.snsClicks is int) &&
+             (!data.keys().hasAny(['videoClicks']) || data.videoClicks is int);
+    }
+
+    // Rules Matches
+    match /photos/{photoId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidPhoto(request.resource.data) && isValidId(photoId);
+      allow update: if isAdmin() && isValidPhoto(request.resource.data) && isValidId(photoId);
+      allow delete: if isAdmin();
+    }
+
+    match /diaries/{diaryId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidDiary(request.resource.data) && isValidId(diaryId);
+      allow update: if isAdmin() && isValidDiary(request.resource.data) && isValidId(diaryId);
+      allow delete: if isAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidAnnouncement(request.resource.data) && isValidId(announcementId);
+      allow update: if isAdmin() && isValidAnnouncement(request.resource.data) && isValidId(announcementId);
+      allow delete: if isAdmin();
+    }
+
+    match /fortunes/{fortuneId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidFortune(request.resource.data) && isValidId(fortuneId);
+      allow update: if isAdmin() && isValidFortune(request.resource.data) && isValidId(fortuneId);
+      allow delete: if isAdmin();
+    }
+
+    match /letters/{letterId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidLetter(request.resource.data) && isValidId(letterId);
+      allow update: if isAdmin() && isValidLetter(request.resource.data) && isValidId(letterId);
+      allow delete: if isAdmin();
+    }
+
+    match /daily_stats/{dateStr} {
+      allow read: if true;
+      allow create, update: if isValidDailyStat(request.resource.data) && isValidId(dateStr);
+    }
+
+    match /admins/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow write: if isAdmin() && isValidId(userId);
+    }
+  }
+}

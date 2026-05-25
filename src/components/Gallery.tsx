@@ -1,56 +1,58 @@
-import React, { useState } from 'react';
-import { GALLERY_PHOTOS } from '../data';
+import React, { useState, useEffect } from 'react';
+import { getPhotos, PhotoEntry } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Camera, BookOpen, X, ChevronLeft, ChevronRight, Sparkles, Heart } from 'lucide-react';
-
-// Enriching the photos with categories and descriptions for the scrapbook feel
-const ALBUM_PHOTOS = GALLERY_PHOTOS.map(photo => {
-  let category = 'memory';
-  let description = '';
-  let sticker = '⭐';
-
-  if (photo.id === 'p1') {
-    category = 'activity';
-    description = 'あろはーずとしての第一歩を踏み出した、はじまりの日！ドキドキが止まりませんでした✨';
-    sticker = '💖';
-  } else if (photo.id === 'p2') {
-    category = 'activity';
-    description = '3時間ぶっ続けでハッピーシンセサイザを踊りきったあとの2人（笑）お疲れ様でした！';
-    sticker = '🔥';
-  } else if (photo.id === 'p3') {
-    category = 'activity';
-    description = '一面に咲くひまわり畑でお日様を浴びながら撮影！スマイル全開のベストショットです🌻';
-    sticker = '🌻';
-  } else if (photo.id === 'p4') {
-    category = 'daily';
-    description = 'ダンス練習のご褒美に食べた巨大パフェ。キャラメルソースがたっぷりで超幸せでした🍨';
-    sticker = '🍓';
-  } else if (photo.id === 'p5') {
-    category = 'activity';
-    description = 'いよいよ本番直前のステージ裏！お互いの背中を叩いて気合いを入れているところをパシャリ！';
-    sticker = '⚡';
-  }
-
-  return {
-    ...photo,
-    category,
-    description,
-    sticker
-  };
-});
 
 export default function Gallery() {
   const [activeTab, setActiveTab] = useState<'all' | 'activity' | 'daily'>('all');
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPhotos()
+      .then((data) => {
+        const mapped = data.map((photo) => {
+          // Deterministic rotation between -4 and 4 based on photo id hash
+          const codeSum = photo.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+          const rotation = (codeSum % 9) - 4;
+          const stickerChoices = ['⭐', '🌻', '🧸', '🍭', '🍓', '💖', '✨', '🎀', '⚡', '🔥'];
+          const sticker = stickerChoices[codeSum % stickerChoices.length];
+          const isDaily = photo.title.includes('パフェ') || 
+                          photo.title.includes('おやつ') || 
+                          photo.title.includes('タルト') || 
+                          photo.title.includes('喫茶') ||
+                          photo.comment.includes('ご褒美') ||
+                          photo.comment.includes('美味しい');
+          const category = isDaily ? 'daily' : 'activity';
+          return {
+            id: photo.id,
+            title: photo.title,
+            url: photo.imageUrl,
+            date: photo.date,
+            description: photo.comment,
+            rotation,
+            sticker,
+            category
+          };
+        });
+        setPhotos(mapped);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gallery photos load error:", err);
+        setLoading(false);
+      });
+  }, []);
 
   // Filter photos based on selection
-  const filteredPhotos = ALBUM_PHOTOS.filter(photo => {
+  const filteredPhotos = photos.filter(photo => {
     if (activeTab === 'all') return true;
     return photo.category === activeTab;
   });
 
   const handleOpenLightbox = (photoId: string) => {
-    const originalIndex = ALBUM_PHOTOS.findIndex((p) => p.id === photoId);
+    const originalIndex = photos.findIndex((p) => p.id === photoId);
     if (originalIndex !== -1) {
       setSelectedPhotoIndex(originalIndex);
       // Soft spark sound effect
@@ -73,23 +75,23 @@ export default function Gallery() {
 
   const handlePrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (selectedPhotoIndex === null) return;
+    if (selectedPhotoIndex === null || photos.length === 0) return;
     setSelectedPhotoIndex((prevIndex) => {
       if (prevIndex === null) return null;
-      return prevIndex === 0 ? ALBUM_PHOTOS.length - 1 : prevIndex - 1;
+      return prevIndex === 0 ? photos.length - 1 : prevIndex - 1;
     });
   };
 
   const handleNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (selectedPhotoIndex === null) return;
+    if (selectedPhotoIndex === null || photos.length === 0) return;
     setSelectedPhotoIndex((prevIndex) => {
       if (prevIndex === null) return null;
-      return prevIndex === ALBUM_PHOTOS.length - 1 ? 0 : prevIndex + 1;
+      return prevIndex === photos.length - 1 ? 0 : prevIndex + 1;
     });
   };
 
-  const currentSelectedPhoto = selectedPhotoIndex !== null ? ALBUM_PHOTOS[selectedPhotoIndex] : null;
+  const currentSelectedPhoto = selectedPhotoIndex !== null ? photos[selectedPhotoIndex] || photos[0] || null : null;
 
   return (
     <div className="w-full max-w-4xl bg-orange-50/20 border-4 border-dark-charcoal p-4 md:p-6 rounded-3xl arcade-border relative flex flex-col gap-6">
@@ -305,7 +307,7 @@ export default function Gallery() {
                 </button>
 
                 <div className="text-xs font-black text-dark-charcoal font-mono">
-                  {selectedPhotoIndex + 1} / {ALBUM_PHOTOS.length}
+                  {(selectedPhotoIndex ?? 0) + 1} / {photos.length}
                 </div>
 
                 <button

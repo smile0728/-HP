@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { FORTUNES } from '../data';
 import { FortuneResult } from '../types';
+import { getFortunes, getLetters } from '../lib/firebase';
 import { Award, RefreshCw, Sun, Heart, Gift, PlayCircle, Download, CheckCircle, BookOpen, Star, Sparkles, Mail, Lock, Unlock } from 'lucide-react';
 
 export default function FortuneGame() {
@@ -13,6 +14,10 @@ export default function FortuneGame() {
   const [isDrawRestricted, setIsDrawRestricted] = useState(false);
   const [lastDrawDate, setLastDrawDate] = useState<string>('');
   
+  // Custom dynamically fetched fortunes & letters states
+  const [fortunesList, setFortunesList] = useState<FortuneResult[]>(FORTUNES);
+  const [lettersList, setLettersList] = useState<any[]>([]);
+
   // Collection Book system states
   const [collection, setCollection] = useState<string[]>([]);
   const [showLetter, setShowLetter] = useState(false);
@@ -22,6 +27,39 @@ export default function FortuneGame() {
   const [visitorName, setVisitorName] = useState<string>('');
   const [tempName, setTempName] = useState<string>('');
   const [showNameModal, setShowNameModal] = useState(false);
+
+  // Convert schema-level GachaFortune into FortuneResult format for compatibility
+  const mapGachaFortuneToFortuneResult = (f: any): FortuneResult => ({
+    title: f.title,
+    description: f.resultMessage,
+    luckLevel: f.resultName as any,
+    commentSmile: f.commentSmile,
+    commentCaramel: f.commentCaramel,
+    luckyItem: f.luckyItem,
+    luckyDance: f.luckyDance,
+    ratingSmile: f.ratingSmile,
+    ratingCaramel: f.ratingCaramel
+  });
+
+  // Fetch collections on mount
+  useEffect(() => {
+    getFortunes()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setFortunesList(data.map(mapGachaFortuneToFortuneResult));
+        }
+      })
+      .catch((err) => console.warn("Failed to retrieve custom fortunes, using fallback", err));
+
+    getLetters()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setLettersList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to retrieve custom letters, using fallback", err));
+  }, []);
+
 
   const triggerConfetti = () => {
     try {
@@ -156,8 +194,8 @@ export default function FortuneGame() {
 
     // Simulated ticket dispensing delay
     setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * FORTUNES.length);
-      const drawnFortune = FORTUNES[randomIndex];
+      const randomIndex = Math.floor(Math.random() * fortunesList.length);
+      const drawnFortune = fortunesList[randomIndex];
       
       setResult(drawnFortune);
       setIsPlaying(false);
@@ -216,7 +254,39 @@ export default function FortuneGame() {
     setShowLetter(false);
   };
 
-  const isComplete = collection.length >= 6;
+  const isComplete = fortunesList.length > 0 ? collection.length >= fortunesList.length : collection.length >= 6;
+
+  const currentLetterData = lettersList.length > 0 ? lettersList[0] : null;
+
+  const smileLetterText = currentLetterData?.smileContent
+    ? currentLetterData.smileContent.replaceAll('{{name}}', visitorName || 'あなた')
+    : `大好きな${visitorName || 'あなた'}へ🌻
+
+おみくじ図鑑のコンプリート、本当に本当にありがとーー！！
+毎日毎日引いてくれてる${visitorName || 'あなた'}の姿を想像してたら、すまいるの心のハッピーメーターが1万倍になっちゃいました！
+
+落ち込んじゃう時や、今日ちょっと力が出ないなーって日も、私たちが送ったお札みくじを見て、少しでもニコニコになってくれたら嬉しいなッ！
+
+これからも${visitorName || 'あなた'}の特等席で、いーーーっぱい踊り狂っていくので、ずっと見つめててね？
+２人は永遠に、${visitorName || 'あなた'}のスーパーヒーロー・スマイルパフォーマーです！だいすきー！
+
+すまいるより 🌻（ハグ！）`;
+
+  const caramelLetterText = currentLetterData?.caramelContent
+    ? currentLetterData.caramelContent.replaceAll('{{name}}', visitorName || 'あなた')
+    : `親愛なる${visitorName || 'あなた'}へ🧸
+
+運勢のすべてを引き当ててくれて、ありがとうございます。おめでとうございます！
+いつも私たちの活動を、お布団の中から…あ、違う、心の中から暖かく見守ってくれて本当に感謝してます。
+
+甘々のキャラメルパフェみたいに、${visitorName || 'あなた'}の毎日が甘くてハッピーな幸せでいっぱい満たされますように。きゃらめるのあざとビームもたくさんお札に注入しておきました（笑）
+
+もし転んじゃっても、のんびり、ゆっくり休んでから、明日またいっしょにスキップしよう？
+
+甘やかされたくなったら、いつでも私たちのところに帰ってきてくださいね。
+${visitorName || 'あなた'}がずっと笑顔でいられるように。
+
+きゃらめるより 🎀（むにゃ…おやすみなさい…）`;
 
   // Rich HTML5 Canvas image rendering tool for downloading
   const handleDownloadImage = async (fortune: FortuneResult) => {
@@ -931,17 +1001,7 @@ export default function FortuneGame() {
                   </div>
                   
                   <p className="text-xs md:text-sm text-dark-charcoal font-bold leading-relaxed whitespace-pre-line tracking-wide">
-                    {`大好きな${visitorName || 'あなた'}へ🌻
-                    
-                    おみくじ図鑑のコンプリート、本当に本当にありがとーー！！
-                    毎日毎日引いてくれてる${visitorName || 'あなた'}の姿を想像してたら、すまいるの心のハッピーメーターが1万倍になっちゃいました！
-                    
-                    落ち込んじゃう時や、今日ちょっと力が出ないなーって日も、私たちが送ったお札みくじを見て、少しでもニコニコになってくれたら嬉しいなッ！
-                    
-                    これからも${visitorName || 'あなた'}の特等席で、いーーーっぱい踊り狂っていくので、ずっと見つめててね？
-                    ２人は永遠に、${visitorName || 'あなた'}のスーパーヒーロー・スマイルパフォーマーです！だいすきー！
-                    
-                    すまいるより 🌻（ハグ！）`}
+                    {smileLetterText}
                   </p>
                 </div>
 
@@ -955,19 +1015,7 @@ export default function FortuneGame() {
                   </div>
 
                   <p className="text-xs md:text-sm text-dark-charcoal font-bold leading-relaxed whitespace-pre-line tracking-wide">
-                    {`親愛なる${visitorName || 'あなた'}へ🧸
-                    
-                    運勢のすべてを引き当ててくれて、ありがとうございます。おめでとうございます！
-                    いつも私たちの活動を、お布団の中から…あ、違う、心の中から暖かく見守ってくれて本当に感謝してます。
-                    
-                    甘々のキャラメルパフェみたいに、${visitorName || 'あなた'}の毎日が甘くてハッピーな幸せでいっぱい満たされますように。きゃらめるのあざとビームもたくさんお札に注入しておきました（笑）
-                    
-                    もし転んじゃっても、のんびり、ゆっくり休んでから、明日またいっしょにスキップしよう？
-                    
-                    甘やかされたくなったら、いつでも私たちのところに帰ってきてくださいね。
-                    ${visitorName || 'あなた'}がずっと笑顔でいられるように。
-                    
-                    きゃらめるより 🎀（むにゃ…おやすみなさい…）`}
+                    {caramelLetterText}
                   </p>
                 </div>
 

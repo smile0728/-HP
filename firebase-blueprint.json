@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "Photo": {
+      "title": "Photo",
+      "description": "Photos of ALOHA-Z",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "comment": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "imageUrl", "title", "date", "visible"]
+    },
+    "Diary": {
+      "title": "Diary",
+      "description": "Exchange Diary entries written by Smile or Caramel",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "author": { "type": "string", "enum": ["smile", "caramel"] },
+        "content": { "type": "string" },
+        "date": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "author", "content", "date", "visible"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Announcements or news for fans",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "date": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "content", "date", "visible"]
+    },
+    "Fortune": {
+      "title": "Fortune",
+      "description": "Season-specific fortune configurations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "season": { "type": "string" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "resultName": { "type": "string" },
+        "resultMessage": { "type": "string" },
+        "rarity": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "sortOrder": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "season", "title", "resultName", "resultMessage", "visible", "sortOrder"]
+    },
+    "Letter": {
+      "title": "Letter",
+      "description": "Complete rewards secret letters designed by Smile & Caramel",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "season": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "author": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "season", "title", "content", "author", "visible"]
+    },
+    "DailyStat": {
+      "title": "DailyStat",
+      "description": "Aggregated daily stats telemetry for the website activity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "pageViews": { "type": "integer" },
+        "fortunesDrawn": { "type": "integer" },
+        "completions": { "type": "integer" },
+        "galleryViews": { "type": "integer" },
+        "snsClicks": { "type": "integer" },
+        "videoClicks": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id"]
+    }
+  },
+  "firestore": {
+    "/photos/{photoId}": {
+      "schema": "Photo",
+      "description": "Photos of ALOHA-Z members with comments"
+    },
+    "/diaries/{diaryId}": {
+      "schema": "Diary",
+      "description": "Exchanged diaries from smile or caramel"
+    },
+    "/announcements/{announcementId}": {
+      "schema": "Announcement",
+      "description": "Corporate or promotional announcements for the homepage"
+    },
+    "/fortunes/{fortuneId}": {
+      "schema": "Fortune",
+      "description": "Active custom gacha fortune records"
+    },
+    "/letters/{letterId}": {
+      "schema": "Letter",
+      "description": "Complete season-reward letters"
+    },
+    "/daily_stats/{dateStr}": {
+      "schema": "DailyStat",
+      "description": "Bespoke aggregated counts daily for analytics graph"
+    }
+  }
+}
