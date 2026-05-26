@@ -12,13 +12,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isEmailVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
-    }
-
     function isAdmin() {
       return isSignedIn() &&
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isValidId(id) {
@@ -59,7 +59,7 @@ service cloud.firestore {
 
     function isValidFortune(data) {
       return data.keys().hasAll(['id', 'season', 'title', 'resultName', 'resultMessage', 'visible', 'sortOrder']) &&
-             data.keys().size() <= 13 &&
+             data.keys().size() <= 17 &&
              data.id is string && data.id.size() <= 128 &&
              data.season is string && data.season.size() <= 64 &&
              data.title is string && data.title.size() <= 128 &&
@@ -68,6 +68,13 @@ service cloud.firestore {
              data.visible is bool &&
              data.sortOrder is int &&
              (!data.keys().hasAny(['imageUrl']) || (data.imageUrl is string && data.imageUrl.size() <= 100000)) &&
+             (!data.keys().hasAny(['commentSmile']) || (data.commentSmile is string && data.commentSmile.size() <= 1000)) &&
+             (!data.keys().hasAny(['commentCaramel']) || (data.commentCaramel is string && data.commentCaramel.size() <= 1000)) &&
+             (!data.keys().hasAny(['luckyItem']) || (data.luckyItem is string && data.luckyItem.size() <= 256)) &&
+             (!data.keys().hasAny(['luckyDance']) || (data.luckyDance is string && data.luckyDance.size() <= 256)) &&
+             (!data.keys().hasAny(['ratingSmile']) || data.ratingSmile is int) &&
+             (!data.keys().hasAny(['ratingCaramel']) || data.ratingCaramel is int) &&
+             (!data.keys().hasAny(['createdAt']) || (data.createdAt is string && data.createdAt.size() <= 64)) &&
              (!data.keys().hasAny(['rarity']) || (data.rarity is string && data.rarity.size() <= 32)) &&
              (!data.keys().hasAny(['startDate']) || (data.startDate is string && data.startDate.size() <= 32)) &&
              (!data.keys().hasAny(['endDate']) || (data.endDate is string && data.endDate.size() <= 32));
@@ -95,6 +102,16 @@ service cloud.firestore {
              (!data.keys().hasAny(['galleryViews']) || data.galleryViews is int) &&
              (!data.keys().hasAny(['snsClicks']) || data.snsClicks is int) &&
              (!data.keys().hasAny(['videoClicks']) || data.videoClicks is int);
+    }
+
+    function isValidGachaState(data) {
+      return data.keys().hasAll(['lastDrawDate', 'todayFortune', 'collection', 'visitorName']) &&
+             data.keys().size() <= 5 &&
+             data.lastDrawDate is string && data.lastDrawDate.size() <= 32 &&
+             (data.todayFortune == null || data.todayFortune is map) &&
+             data.collection is list && data.collection.size() <= 100 &&
+             data.visitorName is string && data.visitorName.size() <= 30 &&
+             (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
     }
 
     // Rules Matches
@@ -136,6 +153,14 @@ service cloud.firestore {
     match /daily_stats/{dateStr} {
       allow read: if true;
       allow create, update: if isValidDailyStat(request.resource.data) && isValidId(dateStr);
+    }
+
+    match /users/{userId}/gacha/{stateId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) &&
+        stateId == 'state' &&
+        isValidGachaState(request.resource.data);
+      allow delete: if isOwner(userId) && stateId == 'state';
     }
 
     match /admins/{userId} {

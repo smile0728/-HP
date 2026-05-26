@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   GoogleAuthProvider, 
+  signInAnonymously,
   signInWithPopup, 
   signOut,
   onAuthStateChanged,
@@ -187,6 +188,62 @@ export const getDailyStats = async (): Promise<DailyStat[]> => {
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, path);
     return [];
+  }
+};
+
+// ----------------------------------------------------
+// FAN GACHA ACCOUNT STATE
+// ----------------------------------------------------
+export interface UserGachaState {
+  lastDrawDate: string;
+  todayFortune: Record<string, unknown> | null;
+  collection: string[];
+  visitorName: string;
+  updatedAt?: string;
+}
+
+export const ensureFanUser = async (): Promise<FirebaseUser | null> => {
+  if (isMockFirebase) return null;
+  if (auth.currentUser) return auth.currentUser;
+  const credential = await signInAnonymously(auth);
+  return credential.user;
+};
+
+export const getUserGachaState = async (uid: string): Promise<UserGachaState | null> => {
+  if (isMockFirebase) return null;
+
+  const path = `users/${uid}/gacha/state`;
+  try {
+    const snapshot = await getDoc(doc(db, 'users', uid, 'gacha', 'state'));
+    if (!snapshot.exists()) return null;
+    const data = snapshot.data();
+    return {
+      lastDrawDate: typeof data.lastDrawDate === 'string' ? data.lastDrawDate : '',
+      todayFortune: data.todayFortune || null,
+      collection: Array.isArray(data.collection) ? data.collection.filter((item) => typeof item === 'string') : [],
+      visitorName: typeof data.visitorName === 'string' ? data.visitorName : '',
+      updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : undefined
+    };
+  } catch (error) {
+    console.warn('Could not load user gacha state, using local storage fallback', error);
+    return null;
+  }
+};
+
+export const saveUserGachaState = async (uid: string, state: UserGachaState): Promise<void> => {
+  if (isMockFirebase) return;
+
+  const path = `users/${uid}/gacha/state`;
+  try {
+    await setDoc(doc(db, 'users', uid, 'gacha', 'state'), {
+      lastDrawDate: state.lastDrawDate,
+      todayFortune: state.todayFortune,
+      collection: state.collection,
+      visitorName: state.visitorName,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    console.warn(`Could not save user gacha state at ${path}`, error);
   }
 };
 
@@ -485,6 +542,7 @@ export interface GachaFortune {
   title: string;
   resultName: string; // e.g. "超大吉"
   resultMessage: string; // description
+  imageUrl?: string;
   commentSmile: string;
   commentCaramel: string;
   luckyItem: string;
@@ -620,6 +678,7 @@ export const getFortunes = async (adminView = false): Promise<GachaFortune[]> =>
         title: d.title || '',
         resultName: d.resultName || doc.id,
         resultMessage: d.resultMessage || '',
+        imageUrl: d.imageUrl || '',
         commentSmile: d.commentSmile || '',
         commentCaramel: d.commentCaramel || '',
         luckyItem: d.luckyItem || '',
@@ -655,10 +714,12 @@ export const saveFortune = async (fortune: GachaFortune): Promise<void> => {
   const path = `fortunes/${fortune.id}`;
   try {
     await setDoc(doc(db, 'fortunes', fortune.id), {
+      id: fortune.id,
       season: fortune.season,
       title: fortune.title,
       resultName: fortune.resultName,
       resultMessage: fortune.resultMessage,
+      imageUrl: fortune.imageUrl || '',
       commentSmile: fortune.commentSmile,
       commentCaramel: fortune.commentCaramel,
       luckyItem: fortune.luckyItem,
@@ -793,4 +854,3 @@ export const deleteLetter = async (id: string): Promise<void> => {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
 };
-

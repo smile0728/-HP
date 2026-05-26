@@ -50,6 +50,7 @@ export interface FortuneResult {
   title: string;
   description: string;
   luckLevel: '超大吉' | '大吉' | '激吉' | '中吉' | '吉' | 'あろはーず吉';
+  imageUrl?: string;
   commentSmile: string;
   commentCaramel: string;
   luckyItem: string;

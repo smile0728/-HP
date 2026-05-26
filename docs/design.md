@@ -123,6 +123,7 @@ firestore.rules
 - `GachaFortune`: ガチャ ID、季節、タイトル、結果名、結果メッセージ、画像 URL、レアリティ、開始日、終了日、表示順、公開状態など
 - `SeasonLetter`: 手紙 ID、季節、タイトル、本文、著者、画像 URL、開始日、終了日、公開状態など
 - `DailyStat`: 日付 ID、ページビュー、ガチャ回数、コンプリート数、ギャラリー閲覧、SNSクリック、動画クリック
+- `UserGachaState`: ファンごとの最終抽選日、当日結果、収集済み運勢、宛名、更新日時
 
 ## 画面構成
 
@@ -259,19 +260,22 @@ Web Audio API による簡易 8bit プレイヤー。
 - `visitorName`
 - `tempName`
 - `showNameModal`
+- `fanAccountId`
+- `gachaSaveStatus`
 
 初期化:
 
-- `alohaz_gacha_collection` から収集状況を復元
-- `alohaz_last_draw_date` が今日なら再抽選不可にする
-- `alohaz_today_fortune` があれば結果を復元
-- `alohaz_visitor_name` から宛名を復元
+- `localStorage` の既存ガチャ状態を先に復元
+- Firebase 匿名ログインでファン用 UID を取得
+- `users/{uid}/gacha/state` を読み込み、ローカル状態とマージ
+- マージ後の状態を画面、`localStorage`、Firestore に反映
+- 匿名ログインまたは Firestore が使えない場合は `localStorage` 保存で継続
 
 抽選:
 
 - 再抽選制限がなければ `isPlaying` を有効化
 - 1.5秒後に `FORTUNES` からランダム選択
-- 当日結果と抽選日を保存
+- 当日結果、抽選日、収集済み運勢を `localStorage` と Firestore に保存
 - 新しい運勢レベルならコレクションに追加
 
 画像生成:
@@ -345,6 +349,7 @@ Google Fonts から以下を読み込む。
 | `letters` | 季節/コンプリート手紙 |
 | `daily_stats` | 日次テレメトリー |
 | `admins` | 管理者 UID |
+| `users/{uid}/gacha/state` | ファンごとのガチャ保存状態 |
 
 `src/lib/firebase.ts` は各コレクションに対して以下の操作関数を提供する。
 
@@ -354,8 +359,10 @@ Google Fonts から以下を読み込む。
 - おみくじ: `getFortunes`, `saveFortune`, `deleteFortune`
 - 手紙: `getLetters`, `saveLetter`, `deleteLetter`
 - 統計: `logTelemetryEvent`, `getDailyStats`
+- ファン用ガチャ状態: `ensureFanUser`, `getUserGachaState`, `saveUserGachaState`
 
 Firebase がモック設定、または Firestore 読み込みに失敗した場合は `alohaz_firestore_` 接頭辞の `localStorage` データを使用する。
+ガチャ状態は専用の `alohaz_*` キーも併用し、匿名ログイン初期化時に Firestore へ移行する。
 
 ## 外部依存とリソース
 
@@ -383,9 +390,11 @@ Firebase がモック設定、または Firestore 読み込みに失敗した場
 - ユーザー入力は React の通常レンダリングで表示されるため、HTML としては解釈されない。
 - コメント、訪問者名はブラウザ内にのみ保存される。
 - 管理画面は Firebase Authentication の Google ログインで保護する。
+- ファン向けガチャ保存は Firebase Authentication の匿名ログインで UID を発行する。
 - Firestore ルールでは `admins/{uid}` の存在で管理者判定を行い、管理者メールはコードにもルールにも含めない。
 - 初期管理者は Firebase Console などから `admins/{uid}` を作成して登録する必要がある。
 - `admins/{uid}` は本人または管理者が個別取得でき、一覧取得と書き込みは管理者に限定する。
+- `users/{uid}/gacha/state` は `request.auth.uid == uid` の本人だけが読み書きできる。
 - Firebase の API キーはクライアント設定として含まれるため、アクセス制御は Firestore ルール側で担保する。
 
 ## 実装上の注意点

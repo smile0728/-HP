@@ -53,6 +53,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+const ADMIN_BUILD_MARKER = 'admin-auth-debug-2026-05-25-2';
+
 export default function AdminPanel() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdminUser, setIsAdminUser] = useState(false);
@@ -83,6 +85,7 @@ export default function AdminPanel() {
 
   // Auth subscriber
   useEffect(() => {
+    console.info(`Admin panel build: ${ADMIN_BUILD_MARKER}`);
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setAuthLoading(true);
       setUser(currentUser);
@@ -105,10 +108,10 @@ export default function AdminPanel() {
 
   // Fetch all entities once authenticated/simulated
   useEffect(() => {
-    if (user || isSimulatedAdmin) {
+    if ((user && isAdminUser) || isSimulatedAdmin) {
       refreshData();
     }
-  }, [user, isSimulatedAdmin]);
+  }, [user, isAdminUser, isSimulatedAdmin]);
 
   const refreshData = async () => {
     setLoading(true);
@@ -143,7 +146,7 @@ export default function AdminPanel() {
       const adminSnapshot = await getDoc(doc(db, 'admins', res.user.uid));
       if (!adminSnapshot.exists()) {
         await signOut(auth);
-        setLoginError('アクセス権限がありません。管理者として登録されたアカウントでログインしてください。');
+        setLoginError(`アクセス権限がありません。Firestore に admins/${res.user.uid} のドキュメントを作成してください。ログイン中のメール: ${res.user.email || '不明'}`);
       }
     } catch (error: any) {
       console.error("Firebase popup login error:", error);
@@ -466,6 +469,7 @@ export default function AdminPanel() {
       title: editingFortune.title || `あろはーず${editingFortune.resultName}おみくじ`,
       resultName: editingFortune.resultName,
       resultMessage: editingFortune.resultMessage,
+      imageUrl: editingFortune.imageUrl || '',
       commentSmile: editingFortune.commentSmile || '',
       commentCaramel: editingFortune.commentCaramel || '',
       luckyItem: editingFortune.luckyItem || '',
@@ -1154,7 +1158,7 @@ export default function AdminPanel() {
               <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
                 <h3 className="text-lg font-black flex items-center gap-1.5">🔮 おみくじ結果管理</h3>
                 <button
-                  onClick={() => setEditingFortune({ id: '', season: '春シーズン', title: '', resultName: '', resultMessage: '', commentSmile: '', commentCaramel: '', luckyItem: '', luckyDance: '', ratingSmile: 3, ratingCaramel: 3, sortOrder: 9, visible: true })}
+                  onClick={() => setEditingFortune({ id: '', season: '春シーズン', title: '', resultName: '', resultMessage: '', imageUrl: '', commentSmile: '', commentCaramel: '', luckyItem: '', luckyDance: '', ratingSmile: 3, ratingCaramel: 3, sortOrder: 9, visible: true })}
                   className="px-4 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] flex items-center gap-1 hover:-translate-y-0.5 transition-transform shrink-0 cursor-pointer"
                 >
                   <Plus size={14} /> おみくじ追加
@@ -1201,8 +1205,8 @@ export default function AdminPanel() {
                         onChange={e => setEditingFortune({ ...editingFortune, visible: e.target.value === 'true' })}
                         className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold"
                       >
-                        <option value="true font-black">ガチャで出現させる（公開する）</option>
-                        <option value="false font-black">テスト下書き（非表示）</option>
+                        <option value="true">ガチャで出現させる（公開する）</option>
+                        <option value="false">テスト下書き（非表示）</option>
                       </select>
                     </div>
                   </div>
@@ -1248,6 +1252,34 @@ export default function AdminPanel() {
                       className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold font-sans h-16"
                       placeholder="今日のラッキー運勢解説を書いてね..."
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_160px] gap-4 items-end">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-dark-charcoal/60">当たり配布画像URL</label>
+                      <input
+                        type="url"
+                        value={editingFortune.imageUrl || ''}
+                        onChange={e => setEditingFortune({ ...editingFortune, imageUrl: e.target.value })}
+                        className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold"
+                        placeholder="https://... 画像のURLを貼り付け"
+                      />
+                      <p className="text-[10px] text-dark-charcoal/45 font-bold">
+                        未入力の場合は、これまで通り自動生成のお札画像を配布します。
+                      </p>
+                    </div>
+                    <div className="h-28 bg-stone-50 border-2 border-dashed border-dark-charcoal/20 rounded-xl overflow-hidden flex items-center justify-center">
+                      {editingFortune.imageUrl ? (
+                        <img
+                          src={editingFortune.imageUrl}
+                          alt="配布画像プレビュー"
+                          className="w-full h-full object-contain bg-white"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span className="text-[10px] font-black text-dark-charcoal/35">画像プレビュー</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1338,6 +1370,11 @@ export default function AdminPanel() {
                       </div>
                       <h4 className="text-xs md:text-sm font-black text-dark-charcoal mt-1">{fort.title}</h4>
                       <p className="text-[11px] text-dark-charcoal/70 line-clamp-1 leading-relaxed">{fort.resultMessage}</p>
+                      {fort.imageUrl && (
+                        <p className="text-[10px] text-brand-pink font-black line-clamp-1">
+                          🎁 配布画像あり: {fort.imageUrl}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex gap-1.5 shrink-0">

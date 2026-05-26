@@ -1,10 +1,9 @@
 {
-  "projectId": "coherent-road-483b3",
-  "appId": "1:188720433339:web:534c33b67450867860019e",
-  "apiKey": "AIzaSyARp3BC-1xYq1FCqzDYXQrVPcrENdTEXwU",
-  "authDomain": "coherent-road-483b3.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-5d5dfddc-44f3-40b2-a60a-5720443a6601",
-  "storageBucket": "coherent-road-483b3.firebasestorage.app",
-  "messagingSenderId": "188720433339",
-  "measurementId": ""
+  "projectId": "aloha-z-hp",
+  "appId": "1:811464929231:web:3ceb0fd467a5d148586cba",
+  "storageBucket": "aloha-z-hp.firebasestorage.app",
+  "apiKey": "AIzaSyCQeN7NeMb5lyCQ0bemkqCkOeE1W68QLHM",
+  "authDomain": "aloha-z-hp.firebaseapp.com",
+  "messagingSenderId": "811464929231",
+  "measurementId": "G-TM1DLL82G0"
 }

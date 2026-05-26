@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { FORTUNES } from '../data';
 import { FortuneResult } from '../types';
-import { getFortunes, getLetters } from '../lib/firebase';
+import { ensureFanUser, getFortunes, getLetters, getUserGachaState, saveUserGachaState, UserGachaState } from '../lib/firebase';
 import { Award, RefreshCw, Sun, Heart, Gift, PlayCircle, Download, CheckCircle, BookOpen, Star, Sparkles, Mail, Lock, Unlock } from 'lucide-react';
 
 export default function FortuneGame() {
@@ -27,12 +27,15 @@ export default function FortuneGame() {
   const [visitorName, setVisitorName] = useState<string>('');
   const [tempName, setTempName] = useState<string>('');
   const [showNameModal, setShowNameModal] = useState(false);
+  const [fanAccountId, setFanAccountId] = useState<string | null>(null);
+  const [gachaSaveStatus, setGachaSaveStatus] = useState<'loading' | 'cloud' | 'local'>('loading');
 
   // Convert schema-level GachaFortune into FortuneResult format for compatibility
   const mapGachaFortuneToFortuneResult = (f: any): FortuneResult => ({
     title: f.title,
     description: f.resultMessage,
     luckLevel: f.resultName as any,
+    imageUrl: f.imageUrl || '',
     commentSmile: f.commentSmile,
     commentCaramel: f.commentCaramel,
     luckyItem: f.luckyItem,
@@ -92,11 +95,87 @@ export default function FortuneGame() {
     } catch (_) {}
   };
 
-  const saveAndOpenLetter = () => {
+  const saveGachaStateToLocal = (state: UserGachaState) => {
+    if (state.lastDrawDate) {
+      localStorage.setItem('alohaz_last_draw_date', state.lastDrawDate);
+    } else {
+      localStorage.removeItem('alohaz_last_draw_date');
+    }
+
+    if (state.todayFortune) {
+      localStorage.setItem('alohaz_today_fortune', JSON.stringify(state.todayFortune));
+    } else {
+      localStorage.removeItem('alohaz_today_fortune');
+    }
+
+    localStorage.setItem('alohaz_gacha_collection', JSON.stringify(state.collection));
+    localStorage.setItem('alohaz_visitor_name', state.visitorName);
+  };
+
+  const loadGachaStateFromLocal = (): UserGachaState => {
+    let parsedCollection: string[] = [];
+    let parsedTodayFortune: Record<string, unknown> | null = null;
+
+    try {
+      const storedCollectionStr = localStorage.getItem('alohaz_gacha_collection');
+      parsedCollection = storedCollectionStr ? JSON.parse(storedCollectionStr) : [];
+    } catch (_) {
+      parsedCollection = [];
+    }
+
+    try {
+      const storedTodayResult = localStorage.getItem('alohaz_today_fortune');
+      parsedTodayFortune = storedTodayResult ? JSON.parse(storedTodayResult) : null;
+    } catch (_) {
+      parsedTodayFortune = null;
+    }
+
+    return {
+      lastDrawDate: localStorage.getItem('alohaz_last_draw_date') || '',
+      todayFortune: parsedTodayFortune,
+      collection: parsedCollection.filter((item) => typeof item === 'string'),
+      visitorName: localStorage.getItem('alohaz_visitor_name') || ''
+    };
+  };
+
+  const applyGachaState = (state: UserGachaState) => {
+    const todayStr = getTodayString();
+    setLastDrawDate(state.lastDrawDate);
+    setCollection(state.collection);
+    setVisitorName(state.visitorName);
+    setTempName(state.visitorName);
+    setIsDrawRestricted(state.lastDrawDate === todayStr);
+    setResult(state.lastDrawDate === todayStr && state.todayFortune ? state.todayFortune as unknown as FortuneResult : null);
+  };
+
+  const mergeGachaStates = (remoteState: UserGachaState | null, localState: UserGachaState): UserGachaState => {
+    if (!remoteState) return localState;
+
+    return {
+      lastDrawDate: remoteState.lastDrawDate || localState.lastDrawDate,
+      todayFortune: remoteState.todayFortune || localState.todayFortune,
+      collection: Array.from(new Set([...localState.collection, ...remoteState.collection])),
+      visitorName: remoteState.visitorName || localState.visitorName
+    };
+  };
+
+  const persistGachaState = async (state: UserGachaState) => {
+    saveGachaStateToLocal(state);
+    if (fanAccountId) {
+      await saveUserGachaState(fanAccountId, state);
+    }
+  };
+
+  const saveAndOpenLetter = async () => {
     if (!tempName.trim()) return;
     const finalName = tempName.trim();
     setVisitorName(finalName);
-    localStorage.setItem('alohaz_visitor_name', finalName);
+    await persistGachaState({
+      lastDrawDate,
+      todayFortune: result as unknown as Record<string, unknown> | null,
+      collection,
+      visitorName: finalName
+    });
     setShowNameModal(false);
     setShowLetter(true);
     triggerConfetti();
@@ -120,39 +199,43 @@ export default function FortuneGame() {
     } catch (_) {}
   };
 
-  // Initialize from LocalStorage
+  // Initialize from localStorage, then upgrade to anonymous Firebase account storage when possible.
   useEffect(() => {
-    // 1. Load Collection
-    const storedCollectionStr = localStorage.getItem('alohaz_gacha_collection');
-    if (storedCollectionStr) {
+    let cancelled = false;
+
+    const initializeGachaAccount = async () => {
+      const localState = loadGachaStateFromLocal();
+      applyGachaState(localState);
+
       try {
-        setCollection(JSON.parse(storedCollectionStr));
-      } catch (_) {
-        setCollection([]);
+        const user = await ensureFanUser();
+        if (cancelled) return;
+
+        if (!user) {
+          setGachaSaveStatus('local');
+          return;
+        }
+
+        setFanAccountId(user.uid);
+        const remoteState = await getUserGachaState(user.uid);
+        if (cancelled) return;
+
+        const mergedState = mergeGachaStates(remoteState, localState);
+        applyGachaState(mergedState);
+        saveGachaStateToLocal(mergedState);
+        await saveUserGachaState(user.uid, mergedState);
+        if (!cancelled) setGachaSaveStatus('cloud');
+      } catch (error) {
+        console.warn('Anonymous fan account setup failed, staying on local gacha save', error);
+        if (!cancelled) setGachaSaveStatus('local');
       }
-    }
+    };
 
-    // 2. Load Draw restrictions
-    const todayStr = getTodayString();
-    const storedDrawDate = localStorage.getItem('alohaz_last_draw_date') || '';
-    setLastDrawDate(storedDrawDate);
+    initializeGachaAccount();
 
-    // If already drawn today, automatically display today's drawn result to avoid losing it on page refresh!
-    if (storedDrawDate === todayStr) {
-      setIsDrawRestricted(true);
-      const storedTodayResult = localStorage.getItem('alohaz_today_fortune');
-      if (storedTodayResult) {
-        try {
-          const parsedResult = JSON.parse(storedTodayResult) as FortuneResult;
-          setResult(parsedResult);
-        } catch (_) {}
-      }
-    }
-
-    // 3. Load Visitor Name
-    const storedName = localStorage.getItem('alohaz_visitor_name') || '';
-    setVisitorName(storedName);
-    setTempName(storedName);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Utility to get today's date string YYYY-MM-DD in local time
@@ -193,27 +276,26 @@ export default function FortuneGame() {
     } catch (_) {}
 
     // Simulated ticket dispensing delay
-    setTimeout(() => {
+    setTimeout(async () => {
       const randomIndex = Math.floor(Math.random() * fortunesList.length);
       const drawnFortune = fortunesList[randomIndex];
+      const nextCollection = collection.includes(drawnFortune.luckLevel)
+        ? collection
+        : [...collection, drawnFortune.luckLevel];
       
       setResult(drawnFortune);
       setIsPlaying(false);
 
       // Save restriction
-      localStorage.setItem('alohaz_last_draw_date', todayStr);
-      localStorage.setItem('alohaz_today_fortune', JSON.stringify(drawnFortune));
       setLastDrawDate(todayStr);
       setIsDrawRestricted(true);
+      setCollection(nextCollection);
 
-      // Add to Collection Book
-      setCollection((prevCollection) => {
-        if (!prevCollection.includes(drawnFortune.luckLevel)) {
-          const updated = [...prevCollection, drawnFortune.luckLevel];
-          localStorage.setItem('alohaz_gacha_collection', JSON.stringify(updated));
-          return updated;
-        }
-        return prevCollection;
+      await persistGachaState({
+        lastDrawDate: todayStr,
+        todayFortune: drawnFortune as unknown as Record<string, unknown>,
+        collection: nextCollection,
+        visitorName
       });
 
       // Sweet success bell
@@ -237,21 +319,30 @@ export default function FortuneGame() {
 
   // Helper to manual reset to test drawing again (for convenience of testing, with clear visual note!)
   const resetDrawStatusForTesting = () => {
-    localStorage.removeItem('alohaz_last_draw_date');
-    localStorage.removeItem('alohaz_today_fortune');
     setIsDrawRestricted(false);
     setResult(null);
+    setLastDrawDate('');
+    persistGachaState({
+      lastDrawDate: '',
+      todayFortune: null,
+      collection,
+      visitorName
+    });
   };
 
   // Clear entire collection to reset
   const resetEntireGachaRecords = () => {
-    localStorage.removeItem('alohaz_gacha_collection');
-    localStorage.removeItem('alohaz_last_draw_date');
-    localStorage.removeItem('alohaz_today_fortune');
     setCollection([]);
     setIsDrawRestricted(false);
     setResult(null);
+    setLastDrawDate('');
     setShowLetter(false);
+    persistGachaState({
+      lastDrawDate: '',
+      todayFortune: null,
+      collection: [],
+      visitorName
+    });
   };
 
   const isComplete = fortunesList.length > 0 ? collection.length >= fortunesList.length : collection.length >= 6;
@@ -663,8 +754,34 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 <BookOpen size={12} className="text-brand-pink" /> 運勢コプリート進捗
               </span>
               <span className={`px-2.5 py-0.5 font-mono text-xs font-black rounded-full ${isComplete ? 'bg-emerald-400 text-white animate-bounce' : 'bg-brand-pink/20 text-brand-pink'}`}>
-                {collection.length} / 6 種類
+                {collection.length} / {fortunesList.length || 6} 種類
               </span>
+            </div>
+
+            <div className="w-full mt-2 bg-white/80 border border-dashed border-dark-charcoal/20 rounded-xl px-3 py-2 text-[10px] font-bold text-dark-charcoal/60 flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1">
+                {gachaSaveStatus === 'loading' ? (
+                  <>
+                    <RefreshCw size={11} className="animate-spin text-brand-orange" />
+                    保存先を準備中...
+                  </>
+                ) : gachaSaveStatus === 'cloud' ? (
+                  <>
+                    <CheckCircle size={11} className="text-emerald-500" />
+                    コンプ情報はアカウントに保存中
+                  </>
+                ) : (
+                  <>
+                    <BookOpen size={11} className="text-brand-pink" />
+                    コンプ情報はこのブラウザに保存中
+                  </>
+                )}
+              </span>
+              {fanAccountId && (
+                <span className="font-mono opacity-50">
+                  ID:{fanAccountId.slice(0, 6)}
+                </span>
+              )}
             </div>
             
             {/* Quick dev restart button */}
@@ -768,6 +885,22 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
 
                 </div>
 
+                {result.imageUrl && (
+                  <div className="mb-5 bg-[#FFFCE8] border-2 border-dark-charcoal rounded-2xl overflow-hidden shadow-[3px_3px_0px_#4A2C2A]">
+                    <div className="bg-brand-orange text-white text-[10px] font-black px-3 py-1.5 border-b-2 border-dark-charcoal">
+                      🎁 今回の当たり配布画像
+                    </div>
+                    <a href={result.imageUrl} target="_blank" rel="noreferrer" className="block bg-white">
+                      <img
+                        src={result.imageUrl}
+                        alt={`${result.luckLevel}の配布画像`}
+                        className="w-full max-h-[360px] object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                    </a>
+                  </div>
+                )}
+
                 {/* Lucky item labels */}
                 <div className="border-t border-dashed border-dark-charcoal/20 pt-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div className="flex flex-col gap-2">
@@ -791,29 +924,40 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                     </div>
                   </div>
 
-                  {/* PREMIUM DOWNLOAD FUNCTION - canvas-generated high quality image card */}
-                  <button
-                    onClick={() => handleDownloadImage(result)}
-                    disabled={canvasGenerating}
-                    className="w-full md:w-auto px-4 py-2 bg-brand-pink text-white font-sans font-black text-xs rounded-xl border-2 border-dark-charcoal shadow-[2.5px_2.5px_0px_#4A2C2A] hover:-translate-y-0.5 active:translate-y-0 duration-150 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                  >
-                    {canvasGenerating ? (
-                      <>
-                        <RefreshCw size={13} className="animate-spin" />
-                        画像作成中...
-                      </>
-                    ) : (
-                      <>
-                        <Download size={13} />
-                        お札画像をダウンロード 💾
-                      </>
-                    )}
-                  </button>
+                  {result.imageUrl ? (
+                    <a
+                      href={result.imageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full md:w-auto px-4 py-2 bg-brand-pink text-white font-sans font-black text-xs rounded-xl border-2 border-dark-charcoal shadow-[2.5px_2.5px_0px_#4A2C2A] hover:-translate-y-0.5 active:translate-y-0 duration-150 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <Download size={13} />
+                      当たり画像を開く 💾
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadImage(result)}
+                      disabled={canvasGenerating}
+                      className="w-full md:w-auto px-4 py-2 bg-brand-pink text-white font-sans font-black text-xs rounded-xl border-2 border-dark-charcoal shadow-[2.5px_2.5px_0px_#4A2C2A] hover:-translate-y-0.5 active:translate-y-0 duration-150 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      {canvasGenerating ? (
+                        <>
+                          <RefreshCw size={13} className="animate-spin" />
+                          画像作成中...
+                        </>
+                      ) : (
+                        <>
+                          <Download size={13} />
+                          お札画像をダウンロード 💾
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Extra guidance sticker */}
                 <p className="text-[10px] text-stone-400 font-bold mt-2.5 text-center">
-                  💾 ボタンを押すと高解像度お札おみくじカードがダウンロードできるよ！コンプリートを目指してね🍭
+                  💾 {result.imageUrl ? '当たり画像はタップして開いて保存してね！' : 'ボタンを押すと高解像度お札おみくじカードがダウンロードできるよ！'}コンプリートを目指してね🍭
                 </p>
               </motion.div>
             ) : (
