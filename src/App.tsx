@@ -22,6 +22,7 @@ import LoadingScreen from './components/LoadingScreen';
 // Data
 import { DANCE_VIDEOS } from './data';
 import { DanceVideo } from './types';
+import { toYouTubeEmbedUrl, toYouTubeThumbnailUrl } from './lib/youtube';
 
 // Site images served from public/
 const MainVisualImg = "/picture/main-visual.png";
@@ -82,6 +83,7 @@ export default function App() {
     'video-3': DANCE_VIDEOS[2].heartsCount,
   });
   const [hasLikedVideo, setHasLikedVideo] = useState<{ [key: string]: boolean }>({});
+  const activeVideoEmbedUrl = toYouTubeEmbedUrl(activeVideo.youtubeUrl);
 
   useEffect(() => {
     import('./lib/firebase')
@@ -460,24 +462,24 @@ export default function App() {
 
                 {/* Simulated Playing display or Playable screen */}
                 <div className="w-full h-full rounded border-2 border-dark-charcoal bg-black relative flex items-center justify-center overflow-hidden flex-1">
-                  
-                  {/* Real Youtube Video Embed or high contrast mock thumbplay */}
-                  <div className="absolute inset-0 w-full h-full">
+                  {activeVideo.youtubeUrl ? (
+                    <iframe
+                      src={activeVideoEmbedUrl}
+                      title={activeVideo.title || activeVideo.description}
+                      className="absolute inset-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
                     <img
-                      src={activeVideo.thumbnailUrl}
-                      alt={activeVideo.title}
+                      src={activeVideo.thumbnailUrl || toYouTubeThumbnailUrl(activeVideo.youtubeUrl) || ''}
+                      alt={activeVideo.title || activeVideo.description}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover blur-[0.5px] opacity-75"
                     />
-                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4 text-center">
-                      <div className="w-14 h-14 rounded-full bg-brand-pink/90 border-2 border-white flex items-center justify-center text-white mb-2 animate-pulse cursor-pointer">
-                        <Youtube size={32} fill="currentColor" />
-                      </div>
-                      <span className="text-[10px] text-zinc-300 font-mono tracking-widest">{activeVideo.originalSong.toUpperCase()}</span>
-                      <h4 className="text-white text-xs md:text-sm font-bold truncate max-w-[320px] mt-1 pr-1">{activeVideo.title}</h4>
-                    </div>
-                  </div>
-
+                  )}
+                  <div className="absolute inset-0 bg-black/20 pointer-events-none" />
                 </div>
 
                 {/* TV controls board inside shell */}
@@ -493,8 +495,7 @@ export default function App() {
                   💡 メンバーのイチオシ裏話
                 </div>
                 <div className="space-y-1.5 leading-relaxed font-semibold">
-                  <p className="text-orange-600">{activeVideo.smileComment}</p>
-                  <p className="text-rose-500">{activeVideo.caramelComment}</p>
+                  <p className="text-dark-charcoal">{activeVideo.description || activeVideo.title}</p>
                 </div>
 
                 {/* Heart Button for like index */}
@@ -529,14 +530,14 @@ export default function App() {
                       }`}
                     >
                       <img 
-                        src={vid.thumbnailUrl} 
-                        alt="cover-thumbnail" 
+                        src={vid.thumbnailUrl || toYouTubeThumbnailUrl(vid.youtubeUrl) || ''} 
+                        alt={vid.title || vid.description} 
                         referrerPolicy="no-referrer"
                         className="w-10 h-10 object-cover rounded border border-dark-charcoal/20"
                       />
                       <div className="truncate flex-1">
                         <span className="font-mono text-[8px] opacity-75">{vid.releasedDate}</span>
-                        <div className="truncate font-semibold">{vid.title.replace('【あろはーず】', '').replace('踊ってみた', '')}</div>
+                        <div className="truncate font-semibold">{(vid.description || vid.title || '').replace('【あろはーず】', '').replace('踊ってみた', '')}</div>
                       </div>
                     </button>
                   ))}

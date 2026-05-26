@@ -26,6 +26,7 @@ import {
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DANCE_VIDEOS, MEMBERS } from '../data';
 import { DanceVideo, MemberProfile, MusicTrack } from '../types';
+import { toYouTubeThumbnailUrl } from './youtube';
 
 // Recognize if setup is using mocked keys
 export const isMockFirebase = firebaseConfig.apiKey === 'mock-api-key' || !firebaseConfig.apiKey;
@@ -107,62 +108,24 @@ const DEFAULT_MUSIC_TRACKS: MusicTrack[] = [
   {
     id: 'track-1',
     title: 'ハッピー・キャンディ・ステップ 🍬',
-    composer: 'すまいる選曲！',
+    description: 'すまいる選曲！',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     likes: 128,
     visible: true,
     sortOrder: 1,
-    notes: [
-      { note: 261.63, duration: 0.2 },
-      { note: 293.66, duration: 0.2 },
-      { note: 329.63, duration: 0.2 },
-      { note: 349.23, duration: 0.2 },
-      { note: 392.00, duration: 0.2 },
-      { note: 329.63, duration: 0.2 },
-      { note: 392.00, duration: 0.4 },
-      { note: 440.00, duration: 0.2 },
-      { note: 392.00, duration: 0.2 },
-      { note: 349.23, duration: 0.2 },
-      { note: 329.63, duration: 0.2 },
-      { note: 293.66, duration: 0.2 },
-      { note: 261.63, duration: 0.4 }
-    ]
   },
   {
     id: 'track-2',
     title: '夕焼けメロンソーダ 🥤',
-    composer: 'きゃらめる選曲！',
+    description: 'きゃらめる選曲！',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     likes: 128,
     visible: true,
     sortOrder: 2,
-    notes: [
-      { note: 329.63, duration: 0.3 },
-      { note: 392.00, duration: 0.3 },
-      { note: 440.00, duration: 0.3 },
-      { note: 523.25, duration: 0.3 },
-      { note: 493.88, duration: 0.3 },
-      { note: 440.00, duration: 0.3 },
-      { note: 392.00, duration: 0.6 },
-      { note: 349.23, duration: 0.3 },
-      { note: 329.63, duration: 0.3 },
-      { note: 293.66, duration: 0.3 },
-      { note: 392.00, duration: 0.6 }
-    ]
   }
 ];
-
-const normalizeMusicNotes = (notes: unknown): Array<{ note: number; duration: number }> => {
-  if (!Array.isArray(notes)) return DEFAULT_MUSIC_TRACKS[0].notes;
-  const normalized = notes
-    .map((item) => {
-      if (!item || typeof item !== 'object') return null;
-      const note = Number((item as { note?: unknown }).note);
-      const duration = Number((item as { duration?: unknown }).duration);
-      if (!Number.isFinite(note) || !Number.isFinite(duration) || note <= 0 || duration <= 0) return null;
-      return { note, duration };
-    })
-    .filter((item): item is { note: number; duration: number } => item !== null);
-  return normalized.length > 0 ? normalized : DEFAULT_MUSIC_TRACKS[0].notes;
-};
 
 // ----------------------------------------------------
 // PUBLIC THEATER / MUSIC / PROFILE CONTENT
@@ -179,13 +142,20 @@ export const getDanceVideos = async (adminView = false): Promise<DanceVideo[]> =
     const items: DanceVideo[] = [];
     qSnapshot.forEach((doc) => {
       const d = doc.data();
+      const description = typeof d.description === 'string' && d.description.trim()
+        ? d.description
+        : (typeof d.originalSong === 'string' ? d.originalSong : '');
+      const thumbnailUrl = typeof d.thumbnailUrl === 'string' && d.thumbnailUrl
+        ? d.thumbnailUrl
+        : (typeof d.youtubeUrl === 'string' ? (toYouTubeThumbnailUrl(d.youtubeUrl) || '') : '');
       items.push({
         id: doc.id,
         title: d.title || '',
-        originalSong: d.originalSong || '',
+        description,
         youtubeUrl: d.youtubeUrl || '',
-        thumbnailUrl: d.thumbnailUrl || '',
+        thumbnailUrl,
         releasedDate: d.releasedDate || '',
+        originalSong: d.originalSong || description,
         smileComment: d.smileComment || '',
         caramelComment: d.caramelComment || '',
         heartsCount: Number(d.heartsCount ?? 0),
@@ -211,15 +181,18 @@ export const saveDanceVideo = async (video: DanceVideo): Promise<void> => {
 
   if (isMockFirebase) return;
   const path = `dance_videos/${video.id}`;
+  const thumbnailUrl = video.thumbnailUrl || toYouTubeThumbnailUrl(video.youtubeUrl) || '';
+  const description = video.description || video.originalSong || '';
   try {
     await setDoc(doc(db, 'dance_videos', video.id), {
       title: video.title,
-      originalSong: video.originalSong,
+      description,
+      originalSong: description,
       youtubeUrl: video.youtubeUrl,
-      thumbnailUrl: video.thumbnailUrl,
+      thumbnailUrl,
       releasedDate: video.releasedDate,
-      smileComment: video.smileComment,
-      caramelComment: video.caramelComment,
+      smileComment: video.smileComment || '',
+      caramelComment: video.caramelComment || '',
       heartsCount: video.heartsCount,
       visible: video.visible !== false,
       sortOrder: Number(video.sortOrder ?? 99),
@@ -255,11 +228,20 @@ export const getMusicTracks = async (adminView = false): Promise<MusicTrack[]> =
     const items: MusicTrack[] = [];
     qSnapshot.forEach((doc) => {
       const d = doc.data();
+      const description = typeof d.description === 'string' && d.description.trim()
+        ? d.description
+        : (typeof d.composer === 'string' ? d.composer : '');
+      const youtubeUrl = typeof d.youtubeUrl === 'string' ? d.youtubeUrl : '';
+      const thumbnailUrl = typeof d.thumbnailUrl === 'string' && d.thumbnailUrl
+        ? d.thumbnailUrl
+        : (youtubeUrl ? (toYouTubeThumbnailUrl(youtubeUrl) || '') : '');
       items.push({
         id: doc.id,
         title: d.title || '',
-        composer: d.composer || '',
-        notes: normalizeMusicNotes(d.notes),
+        description,
+        youtubeUrl,
+        thumbnailUrl,
+        notes: Array.isArray(d.notes) ? d.notes : [],
         likes: Number(d.likes ?? 0),
         visible: d.visible !== false,
         sortOrder: Number(d.sortOrder ?? 99)
@@ -275,23 +257,28 @@ export const getMusicTracks = async (adminView = false): Promise<MusicTrack[]> =
 };
 
 export const saveMusicTrack = async (track: MusicTrack): Promise<void> => {
-  const normalizedTrack = { ...track, notes: normalizeMusicNotes(track.notes) };
   const list = getLocalStorageData<MusicTrack>('music_tracks', DEFAULT_MUSIC_TRACKS);
-  const foundIdx = list.findIndex((item) => item.id === normalizedTrack.id);
-  if (foundIdx !== -1) list[foundIdx] = normalizedTrack;
-  else list.push(normalizedTrack);
+  const foundIdx = list.findIndex((item) => item.id === track.id);
+  if (foundIdx !== -1) list[foundIdx] = track;
+  else list.push(track);
   saveLocalStorageData('music_tracks', list);
 
   if (isMockFirebase) return;
-  const path = `music_tracks/${normalizedTrack.id}`;
+  const path = `music_tracks/${track.id}`;
+  const youtubeUrl = track.youtubeUrl;
+  const description = track.description || track.title || '';
+  const thumbnailUrl = track.thumbnailUrl || toYouTubeThumbnailUrl(youtubeUrl) || '';
   try {
-    await setDoc(doc(db, 'music_tracks', normalizedTrack.id), {
-      title: normalizedTrack.title,
-      composer: normalizedTrack.composer,
-      notes: normalizedTrack.notes,
-      likes: normalizedTrack.likes,
-      visible: normalizedTrack.visible !== false,
-      sortOrder: Number(normalizedTrack.sortOrder ?? 99),
+    await setDoc(doc(db, 'music_tracks', track.id), {
+      title: track.title || description,
+      description,
+      composer: description,
+      youtubeUrl,
+      thumbnailUrl,
+      notes: [],
+      likes: track.likes,
+      visible: track.visible !== false,
+      sortOrder: Number(track.sortOrder ?? 99),
       updatedAt: new Date().toISOString()
     });
   } catch (error) {

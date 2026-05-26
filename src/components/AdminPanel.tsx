@@ -37,6 +37,7 @@ import {
 import { DanceVideo, MemberProfile, MusicTrack } from '../types';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { toYouTubeThumbnailUrl } from '../lib/youtube';
 import {
   Lock,
   Unlock,
@@ -97,7 +98,7 @@ export default function AdminPanel() {
   const [editingFortune, setEditingFortune] = useState<Partial<GachaFortune> | null>(null);
   const [editingLetter, setEditingLetter] = useState<Partial<SeasonLetter> | null>(null);
   const [editingVideo, setEditingVideo] = useState<Partial<DanceVideo> | null>(null);
-  const [editingMusicTrack, setEditingMusicTrack] = useState<Partial<MusicTrack> & { notesText?: string } | null>(null);
+  const [editingMusicTrack, setEditingMusicTrack] = useState<Partial<MusicTrack> | null>(null);
   const [editingProfile, setEditingProfile] = useState<Partial<MemberProfile> & { likesText?: string; dislikesText?: string } | null>(null);
 
   // Auth subscriber
@@ -546,19 +547,17 @@ export default function AdminPanel() {
 
   const handleSaveVideo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingVideo?.id || !editingVideo?.title || !editingVideo?.thumbnailUrl) {
-      alert("動画ID、タイトル、サムネイルURLは必須です。");
+    if (!editingVideo?.id || !editingVideo?.youtubeUrl || !editingVideo?.description) {
+      alert("動画ID、YouTubeリンク、説明文は必須です。");
       return;
     }
     await saveDanceVideo({
       id: editingVideo.id,
-      title: editingVideo.title,
-      originalSong: editingVideo.originalSong || '',
+      title: editingVideo.title || editingVideo.description,
+      description: editingVideo.description,
       youtubeUrl: editingVideo.youtubeUrl || '',
-      thumbnailUrl: editingVideo.thumbnailUrl,
+      thumbnailUrl: editingVideo.thumbnailUrl || toYouTubeThumbnailUrl(editingVideo.youtubeUrl || '') || '',
       releasedDate: editingVideo.releasedDate || '',
-      smileComment: editingVideo.smileComment || '',
-      caramelComment: editingVideo.caramelComment || '',
       heartsCount: Number(editingVideo.heartsCount ?? 0),
       visible: editingVideo.visible !== false,
       sortOrder: Number(editingVideo.sortOrder ?? 99)
@@ -575,22 +574,16 @@ export default function AdminPanel() {
 
   const handleSaveMusicTrack = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingMusicTrack?.id || !editingMusicTrack?.title) {
-      alert("トラックIDと曲名は必須です。");
-      return;
-    }
-    let notes: MusicTrack['notes'] = [];
-    try {
-      notes = JSON.parse(editingMusicTrack.notesText || '[]');
-    } catch (_) {
-      alert("メロディJSONの形式を確認してください。");
+    if (!editingMusicTrack?.id || !editingMusicTrack?.youtubeUrl || !editingMusicTrack?.description) {
+      alert("トラックID、YouTubeリンク、説明文は必須です。");
       return;
     }
     await saveMusicTrack({
       id: editingMusicTrack.id,
-      title: editingMusicTrack.title,
-      composer: editingMusicTrack.composer || '',
-      notes,
+      title: editingMusicTrack.title || editingMusicTrack.description,
+      description: editingMusicTrack.description,
+      youtubeUrl: editingMusicTrack.youtubeUrl,
+      thumbnailUrl: editingMusicTrack.thumbnailUrl || toYouTubeThumbnailUrl(editingMusicTrack.youtubeUrl) || '',
       likes: Number(editingMusicTrack.likes ?? 0),
       visible: editingMusicTrack.visible !== false,
       sortOrder: Number(editingMusicTrack.sortOrder ?? 99)
@@ -1297,7 +1290,7 @@ export default function AdminPanel() {
               <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
                 <h3 className="text-lg font-black flex items-center gap-1.5">🎥 踊ってみた最新動画管理</h3>
                 <button
-                  onClick={() => setEditingVideo({ id: `video-${Date.now()}`, title: '', originalSong: '', youtubeUrl: '', thumbnailUrl: '', releasedDate: new Date().toISOString().split('T')[0].replaceAll('-', '/'), smileComment: '', caramelComment: '', heartsCount: 0, visible: true, sortOrder: danceVideos.length + 1 })}
+                  onClick={() => setEditingVideo({ id: `video-${Date.now()}`, title: '', description: '', youtubeUrl: '', thumbnailUrl: '', releasedDate: new Date().toISOString().split('T')[0].replaceAll('-', '/'), heartsCount: 0, visible: true, sortOrder: danceVideos.length + 1 })}
                   className="px-4 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] flex items-center gap-1 hover:-translate-y-0.5 transition-transform shrink-0 cursor-pointer"
                 >
                   <Plus size={14} /> 動画追加
@@ -1313,14 +1306,9 @@ export default function AdminPanel() {
                     <input type="number" className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="初期推し数" value={editingVideo.heartsCount ?? 0} onChange={e => setEditingVideo({ ...editingVideo, heartsCount: Number(e.target.value) })} />
                     <input type="number" className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="並び順" value={editingVideo.sortOrder ?? 99} onChange={e => setEditingVideo({ ...editingVideo, sortOrder: Number(e.target.value) })} />
                   </div>
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="動画タイトル" value={editingVideo.title || ''} onChange={e => setEditingVideo({ ...editingVideo, title: e.target.value })} />
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="原曲 / クレジット" value={editingVideo.originalSong || ''} onChange={e => setEditingVideo({ ...editingVideo, originalSong: e.target.value })} />
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="YouTube URL または embed URL" value={editingVideo.youtubeUrl || ''} onChange={e => setEditingVideo({ ...editingVideo, youtubeUrl: e.target.value })} />
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="サムネイル画像URL" value={editingVideo.thumbnailUrl || ''} onChange={e => setEditingVideo({ ...editingVideo, thumbnailUrl: e.target.value })} />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <textarea className="px-3 py-2 border-2 border-brand-orange rounded-xl text-xs font-bold h-24" placeholder="すまいるコメント" value={editingVideo.smileComment || ''} onChange={e => setEditingVideo({ ...editingVideo, smileComment: e.target.value })} />
-                    <textarea className="px-3 py-2 border-2 border-brand-pink rounded-xl text-xs font-bold h-24" placeholder="きゃらめるコメント" value={editingVideo.caramelComment || ''} onChange={e => setEditingVideo({ ...editingVideo, caramelComment: e.target.value })} />
-                  </div>
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="動画タイトル（任意）" value={editingVideo.title || ''} onChange={e => setEditingVideo({ ...editingVideo, title: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="YouTube URL" value={editingVideo.youtubeUrl || ''} onChange={e => setEditingVideo({ ...editingVideo, youtubeUrl: e.target.value })} />
+                  <textarea className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold h-24" placeholder="照会内容 / 説明文" value={editingVideo.description || ''} onChange={e => setEditingVideo({ ...editingVideo, description: e.target.value })} />
                   <select value={editingVideo.visible !== false ? 'true' : 'false'} onChange={e => setEditingVideo({ ...editingVideo, visible: e.target.value === 'true' })} className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold">
                     <option value="true">公開する</option>
                     <option value="false">非表示にする</option>
@@ -1335,14 +1323,14 @@ export default function AdminPanel() {
               <div className="space-y-3">
                 {danceVideos.map((video) => (
                   <div key={video.id} className="bg-white border-2 border-dark-charcoal rounded-2xl p-4 shadow-[2px_2px_0_#4A2C2A] flex gap-3">
-                    <img src={video.thumbnailUrl} alt={video.title} className="w-24 h-16 object-cover rounded-lg border border-stone-200 bg-stone-100" referrerPolicy="no-referrer" />
+                    <img src={video.thumbnailUrl || toYouTubeThumbnailUrl(video.youtubeUrl) || ''} alt={video.title || video.description} className="w-24 h-16 object-cover rounded-lg border border-stone-200 bg-stone-100" referrerPolicy="no-referrer" />
                     <div className="flex-1 min-w-0">
                       <div className="flex gap-2 items-center mb-1">
                         <span className="text-[9px] font-mono font-black text-stone-500">#{video.sortOrder ?? 99}</span>
                         <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${video.visible !== false ? 'bg-orange-50 text-brand-orange' : 'bg-stone-100 text-stone-400'}`}>{video.visible !== false ? '公開中' : '非表示'}</span>
                       </div>
-                      <h4 className="text-xs font-black truncate">{video.title}</h4>
-                      <p className="text-[10px] text-dark-charcoal/60 truncate">{video.originalSong}</p>
+                      <h4 className="text-xs font-black truncate">{video.title || video.description}</h4>
+                      <p className="text-[10px] text-dark-charcoal/60 truncate">{video.description}</p>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <button onClick={() => setEditingVideo(video)} className="px-2.5 py-1 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
@@ -1359,7 +1347,7 @@ export default function AdminPanel() {
               <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
                 <h3 className="text-lg font-black flex items-center gap-1.5">🎵 音楽プレイヤー管理</h3>
                 <button
-                  onClick={() => setEditingMusicTrack({ id: `track-${Date.now()}`, title: '', composer: '', notesText: JSON.stringify([{ note: 261.63, duration: 0.25 }], null, 2), likes: 0, visible: true, sortOrder: musicTracks.length + 1 })}
+                  onClick={() => setEditingMusicTrack({ id: `track-${Date.now()}`, title: '', description: '', youtubeUrl: '', thumbnailUrl: '', likes: 0, visible: true, sortOrder: musicTracks.length + 1 })}
                   className="px-4 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] flex items-center gap-1 hover:-translate-y-0.5 transition-transform shrink-0 cursor-pointer"
                 >
                   <Plus size={14} /> トラック追加
@@ -1368,7 +1356,7 @@ export default function AdminPanel() {
 
               {editingMusicTrack && (
                 <form onSubmit={handleSaveMusicTrack} className="bg-white border-3 border-dark-charcoal p-5 rounded-3xl shadow-[4px_4px_0_#4A2C2A] space-y-4">
-                  <h4 className="text-sm font-black text-brand-orange border-b border-stone-100 pb-1.5">8bitトラック編集</h4>
+                  <h4 className="text-sm font-black text-brand-orange border-b border-stone-100 pb-1.5">YouTubeトラック編集</h4>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="ID" value={editingMusicTrack.id || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, id: e.target.value })} />
                     <input type="number" className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="初期いいね数" value={editingMusicTrack.likes ?? 0} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, likes: Number(e.target.value) })} />
@@ -1378,9 +1366,9 @@ export default function AdminPanel() {
                       <option value="false">非表示</option>
                     </select>
                   </div>
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="曲名" value={editingMusicTrack.title || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, title: e.target.value })} />
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="作曲者・選曲コメント" value={editingMusicTrack.composer || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, composer: e.target.value })} />
-                  <textarea className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono h-44" value={editingMusicTrack.notesText || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, notesText: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="曲名（任意）" value={editingMusicTrack.title || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, title: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="YouTube URL" value={editingMusicTrack.youtubeUrl || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, youtubeUrl: e.target.value })} />
+                  <textarea className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold h-24" placeholder="照会内容 / 説明文" value={editingMusicTrack.description || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, description: e.target.value })} />
                   <div className="flex justify-end gap-2 pt-2.5 border-t border-stone-100">
                     <button type="button" onClick={() => setEditingMusicTrack(null)} className="px-4 py-2 bg-stone-100 border-2 border-dark-charcoal rounded-xl text-xs font-black cursor-pointer">キャンセル</button>
                     <button type="submit" className="px-5 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] cursor-pointer">保存登録</button>
@@ -1396,11 +1384,11 @@ export default function AdminPanel() {
                         <span className="text-[9px] font-mono font-black text-stone-500">#{track.sortOrder ?? 99}</span>
                         <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${track.visible !== false ? 'bg-orange-50 text-brand-orange' : 'bg-stone-100 text-stone-400'}`}>{track.visible !== false ? '公開中' : '非表示'}</span>
                       </div>
-                      <h4 className="text-xs font-black truncate">{track.title}</h4>
-                      <p className="text-[10px] text-dark-charcoal/60 truncate">{track.composer} / {track.notes.length} notes</p>
+                      <h4 className="text-xs font-black truncate">{track.title || track.description}</h4>
+                      <p className="text-[10px] text-dark-charcoal/60 truncate">{track.description}</p>
                     </div>
                     <div className="flex gap-1.5">
-                      <button onClick={() => setEditingMusicTrack({ ...track, notesText: JSON.stringify(track.notes, null, 2) })} className="px-2.5 py-1 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
+                      <button onClick={() => setEditingMusicTrack(track)} className="px-2.5 py-1 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
                       <button onClick={() => handleDeleteMusicTrack(track.id)} className="px-2.5 py-1 bg-rose-50 text-brand-pink text-[10px] font-black rounded-lg border border-rose-100 cursor-pointer">削除</button>
                     </div>
                   </div>

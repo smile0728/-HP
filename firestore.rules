@@ -115,15 +115,16 @@ service cloud.firestore {
     }
 
     function isValidDanceVideo(data) {
-      return data.keys().hasAll(['title', 'originalSong', 'youtubeUrl', 'thumbnailUrl', 'releasedDate', 'smileComment', 'caramelComment', 'heartsCount', 'visible', 'sortOrder']) &&
-             data.keys().size() <= 11 &&
+      return data.keys().hasAll(['title', 'description', 'youtubeUrl', 'heartsCount', 'visible', 'sortOrder']) &&
+             data.keys().size() <= 12 &&
              data.title is string && data.title.size() <= 256 &&
-             data.originalSong is string && data.originalSong.size() <= 256 &&
+             data.description is string && data.description.size() <= 1000 &&
              data.youtubeUrl is string && data.youtubeUrl.size() <= 100000 &&
-             data.thumbnailUrl is string && data.thumbnailUrl.size() <= 100000 &&
-             data.releasedDate is string && data.releasedDate.size() <= 32 &&
-             data.smileComment is string && data.smileComment.size() <= 1000 &&
-             data.caramelComment is string && data.caramelComment.size() <= 1000 &&
+             (!data.keys().hasAny(['thumbnailUrl']) || (data.thumbnailUrl is string && data.thumbnailUrl.size() <= 100000)) &&
+             (!data.keys().hasAny(['releasedDate']) || (data.releasedDate is string && data.releasedDate.size() <= 32)) &&
+             (!data.keys().hasAny(['originalSong']) || (data.originalSong is string && data.originalSong.size() <= 256)) &&
+             (!data.keys().hasAny(['smileComment']) || (data.smileComment is string && data.smileComment.size() <= 1000)) &&
+             (!data.keys().hasAny(['caramelComment']) || (data.caramelComment is string && data.caramelComment.size() <= 1000)) &&
              data.heartsCount is int &&
              data.visible is bool &&
              data.sortOrder is int &&
@@ -131,11 +132,14 @@ service cloud.firestore {
     }
 
     function isValidMusicTrack(data) {
-      return data.keys().hasAll(['title', 'composer', 'notes', 'likes', 'visible', 'sortOrder']) &&
-             data.keys().size() <= 7 &&
+      return data.keys().hasAll(['title', 'description', 'youtubeUrl', 'likes', 'visible', 'sortOrder']) &&
+             data.keys().size() <= 10 &&
              data.title is string && data.title.size() <= 128 &&
-             data.composer is string && data.composer.size() <= 128 &&
-             data.notes is list && data.notes.size() <= 128 &&
+             data.description is string && data.description.size() <= 256 &&
+             data.youtubeUrl is string && data.youtubeUrl.size() <= 100000 &&
+             (!data.keys().hasAny(['thumbnailUrl']) || (data.thumbnailUrl is string && data.thumbnailUrl.size() <= 100000)) &&
+             (!data.keys().hasAny(['composer']) || (data.composer is string && data.composer.size() <= 128)) &&
+             (!data.keys().hasAny(['notes']) || data.notes is list) &&
              data.likes is int &&
              data.visible is bool &&
              data.sortOrder is int &&

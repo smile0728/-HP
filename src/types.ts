@@ -16,13 +16,14 @@ export interface MemberProfile {
 
 export interface DanceVideo {
   id: string;
-  title: string;
-  originalSong: string;
-  youtubeUrl: string; // Embed or mock play
-  thumbnailUrl: string;
-  releasedDate: string;
-  smileComment: string;
-  caramelComment: string;
+  title?: string;
+  description: string;
+  youtubeUrl: string;
+  thumbnailUrl?: string;
+  releasedDate?: string;
+  originalSong?: string;
+  smileComment?: string;
+  caramelComment?: string;
   heartsCount: number;
   visible?: boolean;
   sortOrder?: number;
@@ -30,9 +31,12 @@ export interface DanceVideo {
 
 export interface MusicTrack {
   id: string;
-  title: string;
-  composer: string;
-  notes: Array<{ note: number; duration: number }>;
+  title?: string;
+  description: string;
+  youtubeUrl: string;
+  thumbnailUrl?: string;
+  composer?: string;
+  notes?: Array<{ note: number; duration: number }>;
   likes: number;
   visible?: boolean;
   sortOrder?: number;

@@ -37,34 +37,28 @@ export const DANCE_VIDEOS: DanceVideo[] = [
   {
     id: 'video-1',
     title: '【あろはーず】ハッピーシンセサイザ 踊ってみた【オリジナル衣装】',
-    originalSong: 'ハッピーシンセサイザ / EasyPop',
+    description: 'ハッピーシンセサイザ / EasyPop',
     youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Placeholder or playable simulation
     thumbnailUrl: 'https://picsum.photos/seed/dance1/480/360',
     releasedDate: '2026/04/01',
-    smileComment: 'すまいる：あろはーず結成1周年記念動画！衣装は2人で生地から選んだんだよ〜！🎀',
-    caramelComment: 'きゃらめる：私のツインテールが激しすぎてお互い何度も顔に当たりました…（笑）',
     heartsCount: 7820
   },
   {
     id: 'video-2',
     title: '【お外で！】おねがいダーリン 踊ってみた【すまいる×きゃらめる】',
-    originalSong: 'おねがいダーリン / ONE',
+    description: 'おねがいダーリン / ONE',
     youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     thumbnailUrl: 'https://picsum.photos/seed/dance2/480/360',
     releasedDate: '2026/05/10',
-    smileComment: 'すまいる：サビの「ちゅっ！」ってところでカメラをドアップにしてもらったのがこだわり！',
-    caramelComment: 'きゃらめる：すまいるのウィンクがまぶしすぎて心臓が止まるかと思いました。',
     heartsCount: 12430
   },
   {
     id: 'video-3',
     title: '【あろはーず】ファンサ 踊ってみた【10万再生ありがとう!!】',
-    originalSong: 'ファンサ / HoneyWorks',
+    description: 'ファンサ / HoneyWorks',
     youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     thumbnailUrl: 'https://picsum.photos/seed/dance3/480/360',
     releasedDate: '2026/05/20',
-    smileComment: 'すまいる：みんなへの愛が爆発しすぎて、ジャンプ力がいつもより３割増しです！🚀',
-    caramelComment: 'きゃらめる：ファン第一ですっ！最後のラブレターを投げるところ、受け取ってね？🌸',
     heartsCount: 19800
   }
 ];
