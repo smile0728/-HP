@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Instagram, 
@@ -18,22 +18,29 @@ import {
 // Import components
 import CursorSparks from './components/CursorSparks';
 import LoadingScreen from './components/LoadingScreen';
-import ProfileCards from './components/ProfileCards';
-import MusicPlayer from './components/MusicPlayer';
-import ExchangeDiary from './components/ExchangeDiary';
-import Gallery from './components/Gallery';
-import FortuneGame from './components/FortuneGame';
-import Announcements from './components/Announcements';
-import AdminPanel from './components/AdminPanel';
-import { logTelemetryEvent } from './lib/firebase';
 
 // Data
 import { DANCE_VIDEOS } from './data';
 import { DanceVideo } from './types';
 
-// Custom Images generated with AI Studio tool
-const MainVisualImg = "/src/assets/images/alohaz_main_1779675458356.png";
-const LogoImg = "/src/assets/images/alohaz_logo_1779675480937.png";
+// Site images served from public/
+const MainVisualImg = "/picture/あろはーずメインビジュアル.png";
+const LogoImg = "/picture/%E3%81%82%E3%82%8D%E3%81%AF%E3%83%BC%E3%81%9A%E3%80%80%E3%83%AD%E3%82%B4%E3%82%B5%E3%83%B3%E3%83%97%E3%83%AB.svg";
+const Announcements = lazy(() => import('./components/Announcements'));
+const ExchangeDiary = lazy(() => import('./components/ExchangeDiary'));
+const FortuneGame = lazy(() => import('./components/FortuneGame'));
+const Gallery = lazy(() => import('./components/Gallery'));
+const MusicPlayer = lazy(() => import('./components/MusicPlayer'));
+const ProfileCards = lazy(() => import('./components/ProfileCards'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+
+function SectionFallback() {
+  return (
+    <div className="w-full min-h-24 rounded-2xl border-2 border-dashed border-dark-charcoal/20 bg-white/50 flex items-center justify-center text-xs font-black text-dark-charcoal/50">
+      読み込み中...
+    </div>
+  );
+}
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
@@ -51,7 +58,9 @@ export default function App() {
 
     // Track pageView event if active path is fan homepage
     if (!window.location.pathname.startsWith('/admin')) {
-      logTelemetryEvent('pageViews').catch(() => {});
+      import('./lib/firebase')
+        .then(({ logTelemetryEvent }) => logTelemetryEvent('pageViews'))
+        .catch(() => {});
     }
 
     return () => {
@@ -164,7 +173,17 @@ export default function App() {
   };
 
   if (currentPath.startsWith('/admin')) {
-    return <AdminPanel />;
+    return (
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-brand-cream text-dark-charcoal flex items-center justify-center font-sans font-black">
+            管理画面を読み込み中...
+          </div>
+        }
+      >
+        <AdminPanel />
+      </Suspense>
+    );
   }
 
   return (
@@ -310,7 +329,7 @@ export default function App() {
                 initial={{ rotate: -2, scale: 0.95 }}
                 animate={{ rotate: [-2, 1, -2] }}
                 transition={{ repeat: Infinity, duration: 8, ease: 'easeInOut' }}
-                className="p-4 bg-white border-4 border-dark-charcoal rounded-3xl shadow-[5px_8px_0_rgba(255,158,0,0.3)] relative group max-w-sm aspect-square md:max-w-md"
+                className="p-4 bg-white border-4 border-dark-charcoal rounded-3xl shadow-[5px_8px_0_rgba(255,158,0,0.3)] relative group w-full max-w-xl aspect-[16/9]"
               >
                 {/* Visual sticker badges overlapping the frame */}
                 <div className="absolute -top-3 -right-3 text-4xl animate-bounce">🌻</div>
@@ -321,7 +340,7 @@ export default function App() {
                     src={MainVisualImg} 
                     alt="あろはーず 2人のビジュアル" 
                     referrerPolicy="no-referrer"
-                    className="w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
               </motion.div>
@@ -351,7 +370,7 @@ export default function App() {
               {/* Main Slogan Catchphrases */}
               <div className="space-y-1 mt-2">
                 <h2 className="text-3xl font-display font-black text-dark-charcoal leading-tight drop-shadow-sm">
-                  「踊って、笑って、あろはーず！」
+                  「ようこそあろはーずの秘密基地へ！」
                 </h2>
                 <p className="text-brand-pink font-semibold text-sm tracking-widest font-display animate-pulse">
                   今日もちょっとハッピーに🍬 あなたの日常に、ちょこっと甘い時間を。
@@ -394,7 +413,9 @@ export default function App() {
 
           {/* Dynamic Bulletins Board */}
           <section id="announcements" className="w-full flex justify-center max-w-4xl mx-auto py-2">
-            <Announcements />
+            <Suspense fallback={<SectionFallback />}>
+              <Announcements />
+            </Suspense>
           </section>
 
           {/* Section ② LATEST VIDEO & CASSETTE AUDIO COLUMN */}
@@ -511,7 +532,9 @@ export default function App() {
               <h3 className="text-xl font-display font-black text-dark-charcoal text-center mb-4 self-center md:self-start flex items-center gap-1 md:pl-2">
                 🎵 コツコツ8bitプレイヤー
               </h3>
-              <MusicPlayer />
+              <Suspense fallback={<SectionFallback />}>
+                <MusicPlayer />
+              </Suspense>
             </div>
 
           </section>
@@ -527,22 +550,30 @@ export default function App() {
               </h2>
             </div>
             
-            <ProfileCards />
+            <Suspense fallback={<SectionFallback />}>
+              <ProfileCards />
+            </Suspense>
           </section>
 
           {/* Section ④ EXCHANGE DIARY */}
           <section id="diary" className="flex flex-col items-center gap-4">
-            <ExchangeDiary />
+            <Suspense fallback={<SectionFallback />}>
+              <ExchangeDiary />
+            </Suspense>
           </section>
 
           {/* Section ⑤ DRAGGABLE PHOTO COLLAGE BOARD */}
           <section id="gallery" className="flex flex-col items-center gap-4">
-            <Gallery />
+            <Suspense fallback={<SectionFallback />}>
+              <Gallery />
+            </Suspense>
           </section>
 
           {/* Section ⑥ INTERACTIVE O-MIKUJI GACHAMACHINE */}
           <section id="fortune" className="flex flex-col items-center justify-center">
-            <FortuneGame />
+            <Suspense fallback={<SectionFallback />}>
+              <FortuneGame />
+            </Suspense>
           </section>
 
           {/* Footer view */}
