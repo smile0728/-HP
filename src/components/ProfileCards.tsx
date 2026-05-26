@@ -1,12 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MEMBERS } from '../data';
 import { MemberProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Stars, Calendar, Award, Sparkles, Smile, XCircle } from 'lucide-react';
+import { getMemberProfiles } from '../lib/firebase';
 
 export default function ProfileCards() {
   const [activeTab, setActiveTab] = useState<'smile' | 'caramel'>('smile');
-  const selectedMember = MEMBERS.find((m) => m.id === activeTab) as MemberProfile;
+  const [members, setMembers] = useState<MemberProfile[]>(MEMBERS);
+  const selectedMember = (members.find((m) => m.id === activeTab) || MEMBERS.find((m) => m.id === activeTab)) as MemberProfile;
+
+  useEffect(() => {
+    getMemberProfiles(false)
+      .then((items) => {
+        if (items.length > 0) setMembers(items);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="w-full max-w-2xl bg-white border-4 border-dark-charcoal p-6 rounded-3xl arcade-border relative overflow-hidden">

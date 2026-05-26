@@ -18,6 +18,14 @@ import {
   getLetters,
   saveLetter,
   deleteLetter,
+  getDanceVideos,
+  saveDanceVideo,
+  deleteDanceVideo,
+  getMusicTracks,
+  saveMusicTrack,
+  deleteMusicTrack,
+  getMemberProfiles,
+  saveMemberProfile,
   getDailyStats,
   PhotoEntry,
   DiaryRecord,
@@ -26,6 +34,7 @@ import {
   SeasonLetter,
   DailyStat
 } from '../lib/firebase';
+import { DanceVideo, MemberProfile, MusicTrack } from '../types';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import {
@@ -49,7 +58,9 @@ import {
   BarChart2,
   Heart,
   Share2,
-  Youtube
+  Youtube,
+  Music,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -63,7 +74,7 @@ export default function AdminPanel() {
   const [loginError, setLoginError] = useState('');
 
   // Tab navigation
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'announcements' | 'diary' | 'photos' | 'gacha' | 'letters'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'announcements' | 'diary' | 'photos' | 'gacha' | 'letters' | 'videos' | 'music' | 'profiles'>('dashboard');
 
   // Generic loading states
   const [loading, setLoading] = useState(false);
@@ -74,6 +85,9 @@ export default function AdminPanel() {
   const [announcements, setAnnouncements] = useState<AnnouncementEntry[]>([]);
   const [fortunes, setFortunes] = useState<GachaFortune[]>([]);
   const [letters, setLetters] = useState<SeasonLetter[]>([]);
+  const [danceVideos, setDanceVideos] = useState<DanceVideo[]>([]);
+  const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
+  const [profiles, setProfiles] = useState<MemberProfile[]>([]);
   const [stats, setStats] = useState<DailyStat[]>([]);
 
   // Editing modals/forms state
@@ -82,6 +96,9 @@ export default function AdminPanel() {
   const [editingAnnouncement, setEditingAnnouncement] = useState<Partial<AnnouncementEntry> | null>(null);
   const [editingFortune, setEditingFortune] = useState<Partial<GachaFortune> | null>(null);
   const [editingLetter, setEditingLetter] = useState<Partial<SeasonLetter> | null>(null);
+  const [editingVideo, setEditingVideo] = useState<Partial<DanceVideo> | null>(null);
+  const [editingMusicTrack, setEditingMusicTrack] = useState<Partial<MusicTrack> & { notesText?: string } | null>(null);
+  const [editingProfile, setEditingProfile] = useState<Partial<MemberProfile> & { likesText?: string; dislikesText?: string } | null>(null);
 
   // Auth subscriber
   useEffect(() => {
@@ -116,12 +133,15 @@ export default function AdminPanel() {
   const refreshData = async () => {
     setLoading(true);
     try {
-      const [p, d, a, f, l, s] = await Promise.all([
+      const [p, d, a, f, l, v, m, pr, s] = await Promise.all([
         getPhotos(true),
         getDiaries(true),
         getAnnouncements(true),
         getFortunes(true),
         getLetters(true),
+        getDanceVideos(true),
+        getMusicTracks(true),
+        getMemberProfiles(true),
         getDailyStats()
       ]);
       setPhotos(p);
@@ -129,6 +149,9 @@ export default function AdminPanel() {
       setAnnouncements(a);
       setFortunes(f);
       setLetters(l);
+      setDanceVideos(v);
+      setMusicTracks(m);
+      setProfiles(pr);
       setStats(s);
     } catch (err) {
       console.error("Could not fetch admin datasets:", err);
@@ -521,6 +544,92 @@ export default function AdminPanel() {
     refreshData();
   };
 
+  const handleSaveVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVideo?.id || !editingVideo?.title || !editingVideo?.thumbnailUrl) {
+      alert("動画ID、タイトル、サムネイルURLは必須です。");
+      return;
+    }
+    await saveDanceVideo({
+      id: editingVideo.id,
+      title: editingVideo.title,
+      originalSong: editingVideo.originalSong || '',
+      youtubeUrl: editingVideo.youtubeUrl || '',
+      thumbnailUrl: editingVideo.thumbnailUrl,
+      releasedDate: editingVideo.releasedDate || '',
+      smileComment: editingVideo.smileComment || '',
+      caramelComment: editingVideo.caramelComment || '',
+      heartsCount: Number(editingVideo.heartsCount ?? 0),
+      visible: editingVideo.visible !== false,
+      sortOrder: Number(editingVideo.sortOrder ?? 99)
+    });
+    setEditingVideo(null);
+    refreshData();
+  };
+
+  const handleDeleteVideo = async (id: string) => {
+    if (!confirm("この踊ってみた動画を削除しますか？")) return;
+    await deleteDanceVideo(id);
+    refreshData();
+  };
+
+  const handleSaveMusicTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMusicTrack?.id || !editingMusicTrack?.title) {
+      alert("トラックIDと曲名は必須です。");
+      return;
+    }
+    let notes: MusicTrack['notes'] = [];
+    try {
+      notes = JSON.parse(editingMusicTrack.notesText || '[]');
+    } catch (_) {
+      alert("メロディJSONの形式を確認してください。");
+      return;
+    }
+    await saveMusicTrack({
+      id: editingMusicTrack.id,
+      title: editingMusicTrack.title,
+      composer: editingMusicTrack.composer || '',
+      notes,
+      likes: Number(editingMusicTrack.likes ?? 0),
+      visible: editingMusicTrack.visible !== false,
+      sortOrder: Number(editingMusicTrack.sortOrder ?? 99)
+    });
+    setEditingMusicTrack(null);
+    refreshData();
+  };
+
+  const handleDeleteMusicTrack = async (id: string) => {
+    if (!confirm("この音楽トラックを削除しますか？")) return;
+    await deleteMusicTrack(id);
+    refreshData();
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProfile?.id || !editingProfile?.name || !editingProfile?.jpName) {
+      alert("メンバーID、英字名、日本語名は必須です。");
+      return;
+    }
+    await saveMemberProfile({
+      id: editingProfile.id as 'smile' | 'caramel',
+      name: editingProfile.name,
+      jpName: editingProfile.jpName,
+      color: editingProfile.color || '#FF9E00',
+      subColor: editingProfile.subColor || '#FFD000',
+      signature: editingProfile.signature || '',
+      tagline: editingProfile.tagline || '',
+      birthday: editingProfile.birthday || '',
+      bloodType: editingProfile.bloodType || '',
+      likes: (editingProfile.likesText || '').split('\n').map((item) => item.trim()).filter(Boolean),
+      dislikes: (editingProfile.dislikesText || '').split('\n').map((item) => item.trim()).filter(Boolean),
+      message: editingProfile.message || '',
+      stickerStyle: editingProfile.stickerStyle || ''
+    });
+    setEditingProfile(null);
+    refreshData();
+  };
+
   // -----------------------------------------------------------------
   // GRAPHICAL LAYOUT RENDERING
   // -----------------------------------------------------------------
@@ -610,6 +719,39 @@ export default function AdminPanel() {
                 }`}
               >
                 <Camera size={14} /> アルバム写真管理 ({photos.length})
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('videos'); }}
+                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                  activeTab === 'videos'
+                    ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
+                    : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
+                }`}
+              >
+                <Youtube size={14} /> 踊ってみた管理 ({danceVideos.length})
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('music'); }}
+                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                  activeTab === 'music'
+                    ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
+                    : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
+                }`}
+              >
+                <Music size={14} /> 音楽管理 ({musicTracks.length})
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('profiles'); }}
+                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                  activeTab === 'profiles'
+                    ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
+                    : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
+                }`}
+              >
+                <Users size={14} /> 自己紹介管理 ({profiles.length})
               </button>
 
               <button
@@ -1144,6 +1286,170 @@ export default function AdminPanel() {
                         削除
                       </button>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'videos' && (
+            <div className="space-y-5">
+              <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
+                <h3 className="text-lg font-black flex items-center gap-1.5">🎥 踊ってみた最新動画管理</h3>
+                <button
+                  onClick={() => setEditingVideo({ id: `video-${Date.now()}`, title: '', originalSong: '', youtubeUrl: '', thumbnailUrl: '', releasedDate: new Date().toISOString().split('T')[0].replaceAll('-', '/'), smileComment: '', caramelComment: '', heartsCount: 0, visible: true, sortOrder: danceVideos.length + 1 })}
+                  className="px-4 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] flex items-center gap-1 hover:-translate-y-0.5 transition-transform shrink-0 cursor-pointer"
+                >
+                  <Plus size={14} /> 動画追加
+                </button>
+              </div>
+
+              {editingVideo && (
+                <form onSubmit={handleSaveVideo} className="bg-white border-3 border-dark-charcoal p-5 rounded-3xl shadow-[4px_4px_0_#4A2C2A] space-y-4">
+                  <h4 className="text-sm font-black text-brand-orange border-b border-stone-100 pb-1.5">動画情報の編集</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="ID" value={editingVideo.id || ''} onChange={e => setEditingVideo({ ...editingVideo, id: e.target.value })} />
+                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="公開日" value={editingVideo.releasedDate || ''} onChange={e => setEditingVideo({ ...editingVideo, releasedDate: e.target.value })} />
+                    <input type="number" className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="初期推し数" value={editingVideo.heartsCount ?? 0} onChange={e => setEditingVideo({ ...editingVideo, heartsCount: Number(e.target.value) })} />
+                    <input type="number" className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="並び順" value={editingVideo.sortOrder ?? 99} onChange={e => setEditingVideo({ ...editingVideo, sortOrder: Number(e.target.value) })} />
+                  </div>
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="動画タイトル" value={editingVideo.title || ''} onChange={e => setEditingVideo({ ...editingVideo, title: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="原曲 / クレジット" value={editingVideo.originalSong || ''} onChange={e => setEditingVideo({ ...editingVideo, originalSong: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="YouTube URL または embed URL" value={editingVideo.youtubeUrl || ''} onChange={e => setEditingVideo({ ...editingVideo, youtubeUrl: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="サムネイル画像URL" value={editingVideo.thumbnailUrl || ''} onChange={e => setEditingVideo({ ...editingVideo, thumbnailUrl: e.target.value })} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <textarea className="px-3 py-2 border-2 border-brand-orange rounded-xl text-xs font-bold h-24" placeholder="すまいるコメント" value={editingVideo.smileComment || ''} onChange={e => setEditingVideo({ ...editingVideo, smileComment: e.target.value })} />
+                    <textarea className="px-3 py-2 border-2 border-brand-pink rounded-xl text-xs font-bold h-24" placeholder="きゃらめるコメント" value={editingVideo.caramelComment || ''} onChange={e => setEditingVideo({ ...editingVideo, caramelComment: e.target.value })} />
+                  </div>
+                  <select value={editingVideo.visible !== false ? 'true' : 'false'} onChange={e => setEditingVideo({ ...editingVideo, visible: e.target.value === 'true' })} className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold">
+                    <option value="true">公開する</option>
+                    <option value="false">非表示にする</option>
+                  </select>
+                  <div className="flex justify-end gap-2 pt-2.5 border-t border-stone-100">
+                    <button type="button" onClick={() => setEditingVideo(null)} className="px-4 py-2 bg-stone-100 border-2 border-dark-charcoal rounded-xl text-xs font-black cursor-pointer">キャンセル</button>
+                    <button type="submit" className="px-5 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] cursor-pointer">保存登録</button>
+                  </div>
+                </form>
+              )}
+
+              <div className="space-y-3">
+                {danceVideos.map((video) => (
+                  <div key={video.id} className="bg-white border-2 border-dark-charcoal rounded-2xl p-4 shadow-[2px_2px_0_#4A2C2A] flex gap-3">
+                    <img src={video.thumbnailUrl} alt={video.title} className="w-24 h-16 object-cover rounded-lg border border-stone-200 bg-stone-100" referrerPolicy="no-referrer" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex gap-2 items-center mb-1">
+                        <span className="text-[9px] font-mono font-black text-stone-500">#{video.sortOrder ?? 99}</span>
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${video.visible !== false ? 'bg-orange-50 text-brand-orange' : 'bg-stone-100 text-stone-400'}`}>{video.visible !== false ? '公開中' : '非表示'}</span>
+                      </div>
+                      <h4 className="text-xs font-black truncate">{video.title}</h4>
+                      <p className="text-[10px] text-dark-charcoal/60 truncate">{video.originalSong}</p>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <button onClick={() => setEditingVideo(video)} className="px-2.5 py-1 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
+                      <button onClick={() => handleDeleteVideo(video.id)} className="px-2.5 py-1 bg-rose-50 text-brand-pink text-[10px] font-black rounded-lg border border-rose-100 cursor-pointer">削除</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'music' && (
+            <div className="space-y-5">
+              <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
+                <h3 className="text-lg font-black flex items-center gap-1.5">🎵 音楽プレイヤー管理</h3>
+                <button
+                  onClick={() => setEditingMusicTrack({ id: `track-${Date.now()}`, title: '', composer: '', notesText: JSON.stringify([{ note: 261.63, duration: 0.25 }], null, 2), likes: 0, visible: true, sortOrder: musicTracks.length + 1 })}
+                  className="px-4 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] flex items-center gap-1 hover:-translate-y-0.5 transition-transform shrink-0 cursor-pointer"
+                >
+                  <Plus size={14} /> トラック追加
+                </button>
+              </div>
+
+              {editingMusicTrack && (
+                <form onSubmit={handleSaveMusicTrack} className="bg-white border-3 border-dark-charcoal p-5 rounded-3xl shadow-[4px_4px_0_#4A2C2A] space-y-4">
+                  <h4 className="text-sm font-black text-brand-orange border-b border-stone-100 pb-1.5">8bitトラック編集</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="ID" value={editingMusicTrack.id || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, id: e.target.value })} />
+                    <input type="number" className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="初期いいね数" value={editingMusicTrack.likes ?? 0} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, likes: Number(e.target.value) })} />
+                    <input type="number" className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="並び順" value={editingMusicTrack.sortOrder ?? 99} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, sortOrder: Number(e.target.value) })} />
+                    <select value={editingMusicTrack.visible !== false ? 'true' : 'false'} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, visible: e.target.value === 'true' })} className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold">
+                      <option value="true">公開する</option>
+                      <option value="false">非表示</option>
+                    </select>
+                  </div>
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="曲名" value={editingMusicTrack.title || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, title: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="作曲者・選曲コメント" value={editingMusicTrack.composer || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, composer: e.target.value })} />
+                  <textarea className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono h-44" value={editingMusicTrack.notesText || ''} onChange={e => setEditingMusicTrack({ ...editingMusicTrack, notesText: e.target.value })} />
+                  <div className="flex justify-end gap-2 pt-2.5 border-t border-stone-100">
+                    <button type="button" onClick={() => setEditingMusicTrack(null)} className="px-4 py-2 bg-stone-100 border-2 border-dark-charcoal rounded-xl text-xs font-black cursor-pointer">キャンセル</button>
+                    <button type="submit" className="px-5 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] cursor-pointer">保存登録</button>
+                  </div>
+                </form>
+              )}
+
+              <div className="space-y-3">
+                {musicTracks.map((track) => (
+                  <div key={track.id} className="bg-white border-2 border-dark-charcoal rounded-2xl p-4 shadow-[2px_2px_0_#4A2C2A] flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex gap-2 items-center mb-1">
+                        <span className="text-[9px] font-mono font-black text-stone-500">#{track.sortOrder ?? 99}</span>
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${track.visible !== false ? 'bg-orange-50 text-brand-orange' : 'bg-stone-100 text-stone-400'}`}>{track.visible !== false ? '公開中' : '非表示'}</span>
+                      </div>
+                      <h4 className="text-xs font-black truncate">{track.title}</h4>
+                      <p className="text-[10px] text-dark-charcoal/60 truncate">{track.composer} / {track.notes.length} notes</p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setEditingMusicTrack({ ...track, notesText: JSON.stringify(track.notes, null, 2) })} className="px-2.5 py-1 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
+                      <button onClick={() => handleDeleteMusicTrack(track.id)} className="px-2.5 py-1 bg-rose-50 text-brand-pink text-[10px] font-black rounded-lg border border-rose-100 cursor-pointer">削除</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'profiles' && (
+            <div className="space-y-5">
+              <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
+                <h3 className="text-lg font-black flex items-center gap-1.5">🌻 自己紹介管理</h3>
+              </div>
+
+              {editingProfile && (
+                <form onSubmit={handleSaveProfile} className="bg-white border-3 border-dark-charcoal p-5 rounded-3xl shadow-[4px_4px_0_#4A2C2A] space-y-4">
+                  <h4 className="text-sm font-black text-brand-orange border-b border-stone-100 pb-1.5">プロフィール編集</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select value={editingProfile.id || 'smile'} onChange={e => setEditingProfile({ ...editingProfile, id: e.target.value as 'smile' | 'caramel' })} className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold">
+                      <option value="smile">すまいる</option>
+                      <option value="caramel">きゃらめる</option>
+                    </select>
+                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="英字名" value={editingProfile.name || ''} onChange={e => setEditingProfile({ ...editingProfile, name: e.target.value })} />
+                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="日本語名" value={editingProfile.jpName || ''} onChange={e => setEditingProfile({ ...editingProfile, jpName: e.target.value })} />
+                  </div>
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="キャッチコピー" value={editingProfile.tagline || ''} onChange={e => setEditingProfile({ ...editingProfile, tagline: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="サイン文" value={editingProfile.signature || ''} onChange={e => setEditingProfile({ ...editingProfile, signature: e.target.value })} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="誕生日" value={editingProfile.birthday || ''} onChange={e => setEditingProfile({ ...editingProfile, birthday: e.target.value })} />
+                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="血液型" value={editingProfile.bloodType || ''} onChange={e => setEditingProfile({ ...editingProfile, bloodType: e.target.value })} />
+                  </div>
+                  <textarea className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold h-24" placeholder="メッセージ" value={editingProfile.message || ''} onChange={e => setEditingProfile({ ...editingProfile, message: e.target.value })} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <textarea className="px-3 py-2 border-2 border-emerald-300 rounded-xl text-xs font-bold h-28" placeholder="好きなもの（一行にひとつ）" value={editingProfile.likesText || ''} onChange={e => setEditingProfile({ ...editingProfile, likesText: e.target.value })} />
+                    <textarea className="px-3 py-2 border-2 border-rose-300 rounded-xl text-xs font-bold h-28" placeholder="苦手なもの（一行にひとつ）" value={editingProfile.dislikesText || ''} onChange={e => setEditingProfile({ ...editingProfile, dislikesText: e.target.value })} />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2.5 border-t border-stone-100">
+                    <button type="button" onClick={() => setEditingProfile(null)} className="px-4 py-2 bg-stone-100 border-2 border-dark-charcoal rounded-xl text-xs font-black cursor-pointer">キャンセル</button>
+                    <button type="submit" className="px-5 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] cursor-pointer">保存登録</button>
+                  </div>
+                </form>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {profiles.map((profile) => (
+                  <div key={profile.id} className="bg-white border-2 border-dark-charcoal rounded-2xl p-4 shadow-[2px_2px_0_#4A2C2A]">
+                    <h4 className="text-sm font-black">{profile.jpName} <span className="text-[10px] text-stone-400">({profile.name})</span></h4>
+                    <p className="text-[11px] text-dark-charcoal/70 mt-1 line-clamp-2">{profile.tagline}</p>
+                    <button onClick={() => setEditingProfile({ ...profile, likesText: profile.likes.join('\n'), dislikesText: profile.dislikes.join('\n') })} className="mt-3 px-3 py-1.5 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
                   </div>
                 ))}
               </div>

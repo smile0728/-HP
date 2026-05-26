@@ -1,20 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, SkipForward, Volume2, Radio, Music, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
-
-interface ChiptuneTrack {
-  id: string;
-  title: string;
-  composer: string;
-  notes: Array<{ note: number; duration: number }>;
-}
+import { getMusicTracks } from '../lib/firebase';
+import { MusicTrack } from '../types';
 
 // Interactive synth melody notes (MIDI numbers or frequencies representation)
-const TRACKS: ChiptuneTrack[] = [
+const FALLBACK_TRACKS: MusicTrack[] = [
   {
     id: 'track-1',
     title: 'ハッピー・キャンディ・ステップ 🍬',
     composer: 'すまいる選曲！',
+    likes: 128,
+    visible: true,
+    sortOrder: 1,
     notes: [
       { note: 261.63, duration: 0.2 }, // C4
       { note: 293.66, duration: 0.2 }, // D4
@@ -35,6 +33,9 @@ const TRACKS: ChiptuneTrack[] = [
     id: 'track-2',
     title: '夕焼けメロンソーダ 🥤',
     composer: 'きゃらめる選曲！',
+    likes: 128,
+    visible: true,
+    sortOrder: 2,
     notes: [
       { note: 329.63, duration: 0.3 }, // E4
       { note: 392.00, duration: 0.3 }, // G4
@@ -52,24 +53,40 @@ const TRACKS: ChiptuneTrack[] = [
 ];
 
 export default function MusicPlayer() {
+  const [tracks, setTracks] = useState<MusicTrack[]>(FALLBACK_TRACKS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [volume, setVolume] = useState(0.3);
-  const [likes, setLikes] = useState(128);
+  const [likes, setLikes] = useState(FALLBACK_TRACKS[0].likes);
   const [isLiked, setIsLiked] = useState(false);
   
   const audioCtxRef = useRef<AudioContext | null>(null);
   const noteIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const playStateRef = useRef({ noteIndex: 0, isPlaying: false });
 
-  const currentTrack = TRACKS[currentTrackIndex];
+  const currentTrack = tracks[currentTrackIndex] || FALLBACK_TRACKS[0];
 
   // Stop synthesis when component unmounts
   useEffect(() => {
+    getMusicTracks(false)
+      .then((items) => {
+        if (items.length === 0) return;
+        setTracks(items);
+        setCurrentTrackIndex(0);
+        setLikes(items[0].likes);
+      })
+      .catch(() => {});
+
     return () => {
       stopMelody();
     };
   }, []);
+
+  useEffect(() => {
+    setLikes(currentTrack.likes);
+    setIsLiked(false);
+    playStateRef.current.noteIndex = 0;
+  }, [currentTrack.id]);
 
   const initAudio = () => {
     if (!audioCtxRef.current) {
@@ -109,7 +126,7 @@ export default function MusicPlayer() {
     setIsPlaying(true);
     playStateRef.current.isPlaying = true;
     
-    const track = TRACKS[currentTrackIndex];
+    const track = tracks[currentTrackIndex] || FALLBACK_TRACKS[0];
     let noteIdx = playStateRef.current.noteIndex;
 
     const tick = () => {
@@ -147,7 +164,7 @@ export default function MusicPlayer() {
   const playNext = () => {
     stopMelody();
     playStateRef.current.noteIndex = 0;
-    setCurrentTrackIndex((prev) => (prev + 1) % TRACKS.length);
+    setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
     // Restart automatic player
     setTimeout(() => {
       startMelody();

@@ -75,12 +75,30 @@ export default function App() {
   
   // Video simulated play states
   const [activeVideo, setActiveVideo] = useState<DanceVideo>(DANCE_VIDEOS[0]);
+  const [danceVideos, setDanceVideos] = useState<DanceVideo[]>(DANCE_VIDEOS);
   const [videoLikes, setVideoLikes] = useState<{ [key: string]: number }>({
     'video-1': DANCE_VIDEOS[0].heartsCount,
     'video-2': DANCE_VIDEOS[1].heartsCount,
     'video-3': DANCE_VIDEOS[2].heartsCount,
   });
   const [hasLikedVideo, setHasLikedVideo] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    import('./lib/firebase')
+      .then(async ({ getDanceVideos }) => {
+        const videos = await getDanceVideos(false);
+        if (videos.length === 0) return;
+        setDanceVideos(videos);
+        setActiveVideo(videos[0]);
+        setVideoLikes(
+          videos.reduce<Record<string, number>>((acc, video) => {
+            acc[video.id] = video.heartsCount;
+            return acc;
+          }, {})
+        );
+      })
+      .catch(() => {});
+  }, []);
 
   // Secret candy rain particle simulation
   const [fallingCandies, setFallingCandies] = useState<Array<{ id: number; left: number; emoji: string; delay: number }>>([]);
@@ -150,10 +168,10 @@ export default function App() {
   const handleLikeVideo = (videoId: string) => {
     const prevLiked = hasLikedVideo[videoId];
     if (prevLiked) {
-      setVideoLikes((prev) => ({ ...prev, [videoId]: prev[videoId] - 1 }));
+      setVideoLikes((prev) => ({ ...prev, [videoId]: Math.max((prev[videoId] ?? 0) - 1, 0) }));
       setHasLikedVideo((prev) => ({ ...prev, [videoId]: false }));
     } else {
-      setVideoLikes((prev) => ({ ...prev, [videoId]: prev[videoId] + 1 }));
+      setVideoLikes((prev) => ({ ...prev, [videoId]: (prev[videoId] ?? activeVideo.heartsCount ?? 0) + 1 }));
       setHasLikedVideo((prev) => ({ ...prev, [videoId]: true }));
 
       // Soft heart beat beep
@@ -491,7 +509,7 @@ export default function App() {
                     }`}
                   >
                     <Heart size={12} fill={hasLikedVideo[activeVideo.id] ? 'currentColor' : 'none'} className={hasLikedVideo[activeVideo.id] ? 'animate-bounce' : ''} />
-                    <span>この動画を推す！ ({videoLikes[activeVideo.id]})</span>
+                    <span>この動画を推す！ ({videoLikes[activeVideo.id] ?? activeVideo.heartsCount})</span>
                   </button>
                 </div>
               </div>
@@ -500,7 +518,7 @@ export default function App() {
               <div className="flex flex-col gap-2 mt-2">
                 <span className="text-xs font-mono font-bold text-dark-charcoal/50">VIDEO SELECTOR（動画を選択）</span>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  {DANCE_VIDEOS.map((vid) => (
+                  {danceVideos.map((vid) => (
                     <button
                       key={vid.id}
                       onClick={() => setActiveVideo(vid)}

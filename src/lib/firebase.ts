@@ -24,6 +24,8 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
+import { DANCE_VIDEOS, MEMBERS } from '../data';
+import { DanceVideo, MemberProfile, MusicTrack } from '../types';
 
 // Recognize if setup is using mocked keys
 export const isMockFirebase = firebaseConfig.apiKey === 'mock-api-key' || !firebaseConfig.apiKey;
@@ -100,6 +102,282 @@ function getLocalStorageData<T>(key: string, defaultData: T[]): T[] {
 function saveLocalStorageData<T>(key: string, data: T[]) {
   localStorage.setItem(LOCAL_STORAGE_PREFIX + key, JSON.stringify(data));
 }
+
+const DEFAULT_MUSIC_TRACKS: MusicTrack[] = [
+  {
+    id: 'track-1',
+    title: 'ハッピー・キャンディ・ステップ 🍬',
+    composer: 'すまいる選曲！',
+    likes: 128,
+    visible: true,
+    sortOrder: 1,
+    notes: [
+      { note: 261.63, duration: 0.2 },
+      { note: 293.66, duration: 0.2 },
+      { note: 329.63, duration: 0.2 },
+      { note: 349.23, duration: 0.2 },
+      { note: 392.00, duration: 0.2 },
+      { note: 329.63, duration: 0.2 },
+      { note: 392.00, duration: 0.4 },
+      { note: 440.00, duration: 0.2 },
+      { note: 392.00, duration: 0.2 },
+      { note: 349.23, duration: 0.2 },
+      { note: 329.63, duration: 0.2 },
+      { note: 293.66, duration: 0.2 },
+      { note: 261.63, duration: 0.4 }
+    ]
+  },
+  {
+    id: 'track-2',
+    title: '夕焼けメロンソーダ 🥤',
+    composer: 'きゃらめる選曲！',
+    likes: 128,
+    visible: true,
+    sortOrder: 2,
+    notes: [
+      { note: 329.63, duration: 0.3 },
+      { note: 392.00, duration: 0.3 },
+      { note: 440.00, duration: 0.3 },
+      { note: 523.25, duration: 0.3 },
+      { note: 493.88, duration: 0.3 },
+      { note: 440.00, duration: 0.3 },
+      { note: 392.00, duration: 0.6 },
+      { note: 349.23, duration: 0.3 },
+      { note: 329.63, duration: 0.3 },
+      { note: 293.66, duration: 0.3 },
+      { note: 392.00, duration: 0.6 }
+    ]
+  }
+];
+
+const normalizeMusicNotes = (notes: unknown): Array<{ note: number; duration: number }> => {
+  if (!Array.isArray(notes)) return DEFAULT_MUSIC_TRACKS[0].notes;
+  const normalized = notes
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const note = Number((item as { note?: unknown }).note);
+      const duration = Number((item as { duration?: unknown }).duration);
+      if (!Number.isFinite(note) || !Number.isFinite(duration) || note <= 0 || duration <= 0) return null;
+      return { note, duration };
+    })
+    .filter((item): item is { note: number; duration: number } => item !== null);
+  return normalized.length > 0 ? normalized : DEFAULT_MUSIC_TRACKS[0].notes;
+};
+
+// ----------------------------------------------------
+// PUBLIC THEATER / MUSIC / PROFILE CONTENT
+// ----------------------------------------------------
+export const getDanceVideos = async (adminView = false): Promise<DanceVideo[]> => {
+  if (isMockFirebase) {
+    const list = getLocalStorageData<DanceVideo>('dance_videos', DANCE_VIDEOS);
+    return adminView ? list : list.filter((item) => item.visible !== false);
+  }
+
+  const path = 'dance_videos';
+  try {
+    const qSnapshot = await getDocs(collection(db, path));
+    const items: DanceVideo[] = [];
+    qSnapshot.forEach((doc) => {
+      const d = doc.data();
+      items.push({
+        id: doc.id,
+        title: d.title || '',
+        originalSong: d.originalSong || '',
+        youtubeUrl: d.youtubeUrl || '',
+        thumbnailUrl: d.thumbnailUrl || '',
+        releasedDate: d.releasedDate || '',
+        smileComment: d.smileComment || '',
+        caramelComment: d.caramelComment || '',
+        heartsCount: Number(d.heartsCount ?? 0),
+        visible: d.visible !== false,
+        sortOrder: Number(d.sortOrder ?? 99)
+      });
+    });
+    const sorted = (items.length > 0 ? items : DANCE_VIDEOS).sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
+    return adminView ? sorted : sorted.filter((item) => item.visible !== false);
+  } catch (error) {
+    console.warn('Could not query Firestore dance videos, utilizing fallback storage', error);
+    const list = getLocalStorageData<DanceVideo>('dance_videos', DANCE_VIDEOS);
+    return adminView ? list : list.filter((item) => item.visible !== false);
+  }
+};
+
+export const saveDanceVideo = async (video: DanceVideo): Promise<void> => {
+  const list = getLocalStorageData<DanceVideo>('dance_videos', DANCE_VIDEOS);
+  const foundIdx = list.findIndex((item) => item.id === video.id);
+  if (foundIdx !== -1) list[foundIdx] = video;
+  else list.push(video);
+  saveLocalStorageData('dance_videos', list);
+
+  if (isMockFirebase) return;
+  const path = `dance_videos/${video.id}`;
+  try {
+    await setDoc(doc(db, 'dance_videos', video.id), {
+      title: video.title,
+      originalSong: video.originalSong,
+      youtubeUrl: video.youtubeUrl,
+      thumbnailUrl: video.thumbnailUrl,
+      releasedDate: video.releasedDate,
+      smileComment: video.smileComment,
+      caramelComment: video.caramelComment,
+      heartsCount: video.heartsCount,
+      visible: video.visible !== false,
+      sortOrder: Number(video.sortOrder ?? 99),
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
+
+export const deleteDanceVideo = async (id: string): Promise<void> => {
+  const list = getLocalStorageData<DanceVideo>('dance_videos', DANCE_VIDEOS);
+  saveLocalStorageData('dance_videos', list.filter((item) => item.id !== id));
+
+  if (isMockFirebase) return;
+  const path = `dance_videos/${id}`;
+  try {
+    await deleteDoc(doc(db, 'dance_videos', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+export const getMusicTracks = async (adminView = false): Promise<MusicTrack[]> => {
+  if (isMockFirebase) {
+    const list = getLocalStorageData<MusicTrack>('music_tracks', DEFAULT_MUSIC_TRACKS);
+    return adminView ? list : list.filter((item) => item.visible !== false);
+  }
+
+  const path = 'music_tracks';
+  try {
+    const qSnapshot = await getDocs(collection(db, path));
+    const items: MusicTrack[] = [];
+    qSnapshot.forEach((doc) => {
+      const d = doc.data();
+      items.push({
+        id: doc.id,
+        title: d.title || '',
+        composer: d.composer || '',
+        notes: normalizeMusicNotes(d.notes),
+        likes: Number(d.likes ?? 0),
+        visible: d.visible !== false,
+        sortOrder: Number(d.sortOrder ?? 99)
+      });
+    });
+    const sorted = (items.length > 0 ? items : DEFAULT_MUSIC_TRACKS).sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
+    return adminView ? sorted : sorted.filter((item) => item.visible !== false);
+  } catch (error) {
+    console.warn('Could not query Firestore music tracks, utilizing fallback storage', error);
+    const list = getLocalStorageData<MusicTrack>('music_tracks', DEFAULT_MUSIC_TRACKS);
+    return adminView ? list : list.filter((item) => item.visible !== false);
+  }
+};
+
+export const saveMusicTrack = async (track: MusicTrack): Promise<void> => {
+  const normalizedTrack = { ...track, notes: normalizeMusicNotes(track.notes) };
+  const list = getLocalStorageData<MusicTrack>('music_tracks', DEFAULT_MUSIC_TRACKS);
+  const foundIdx = list.findIndex((item) => item.id === normalizedTrack.id);
+  if (foundIdx !== -1) list[foundIdx] = normalizedTrack;
+  else list.push(normalizedTrack);
+  saveLocalStorageData('music_tracks', list);
+
+  if (isMockFirebase) return;
+  const path = `music_tracks/${normalizedTrack.id}`;
+  try {
+    await setDoc(doc(db, 'music_tracks', normalizedTrack.id), {
+      title: normalizedTrack.title,
+      composer: normalizedTrack.composer,
+      notes: normalizedTrack.notes,
+      likes: normalizedTrack.likes,
+      visible: normalizedTrack.visible !== false,
+      sortOrder: Number(normalizedTrack.sortOrder ?? 99),
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
+
+export const deleteMusicTrack = async (id: string): Promise<void> => {
+  const list = getLocalStorageData<MusicTrack>('music_tracks', DEFAULT_MUSIC_TRACKS);
+  saveLocalStorageData('music_tracks', list.filter((item) => item.id !== id));
+
+  if (isMockFirebase) return;
+  const path = `music_tracks/${id}`;
+  try {
+    await deleteDoc(doc(db, 'music_tracks', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+export const getMemberProfiles = async (adminView = false): Promise<MemberProfile[]> => {
+  if (isMockFirebase) {
+    return getLocalStorageData<MemberProfile>('member_profiles', MEMBERS);
+  }
+
+  const path = 'member_profiles';
+  try {
+    const qSnapshot = await getDocs(collection(db, path));
+    const items: MemberProfile[] = [];
+    qSnapshot.forEach((doc) => {
+      const d = doc.data();
+      const id = doc.id === 'caramel' ? 'caramel' : 'smile';
+      items.push({
+        id,
+        name: d.name || '',
+        jpName: d.jpName || '',
+        color: d.color || (id === 'smile' ? '#FF9E00' : '#FF6B8B'),
+        subColor: d.subColor || (id === 'smile' ? '#FFD000' : '#FFA5A5'),
+        signature: d.signature || '',
+        tagline: d.tagline || '',
+        birthday: d.birthday || '',
+        bloodType: d.bloodType || '',
+        likes: Array.isArray(d.likes) ? d.likes.filter((item: unknown) => typeof item === 'string') : [],
+        dislikes: Array.isArray(d.dislikes) ? d.dislikes.filter((item: unknown) => typeof item === 'string') : [],
+        message: d.message || '',
+        stickerStyle: d.stickerStyle || ''
+      });
+    });
+    if (items.length === 0) return MEMBERS;
+    const order = ['smile', 'caramel'];
+    return items.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  } catch (error) {
+    console.warn('Could not query Firestore member profiles, utilizing fallback storage', error);
+    return getLocalStorageData<MemberProfile>('member_profiles', MEMBERS);
+  }
+};
+
+export const saveMemberProfile = async (profile: MemberProfile): Promise<void> => {
+  const list = getLocalStorageData<MemberProfile>('member_profiles', MEMBERS);
+  const foundIdx = list.findIndex((item) => item.id === profile.id);
+  if (foundIdx !== -1) list[foundIdx] = profile;
+  else list.push(profile);
+  saveLocalStorageData('member_profiles', list);
+
+  if (isMockFirebase) return;
+  const path = `member_profiles/${profile.id}`;
+  try {
+    await setDoc(doc(db, 'member_profiles', profile.id), {
+      name: profile.name,
+      jpName: profile.jpName,
+      color: profile.color,
+      subColor: profile.subColor,
+      signature: profile.signature,
+      tagline: profile.tagline,
+      birthday: profile.birthday,
+      bloodType: profile.bloodType,
+      likes: profile.likes,
+      dislikes: profile.dislikes,
+      message: profile.message,
+      stickerStyle: profile.stickerStyle,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
 
 // ----------------------------------------------------
 // TELEMETRY LOGGING (DAILY ACCESS STATS)

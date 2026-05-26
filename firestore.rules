@@ -114,6 +114,52 @@ service cloud.firestore {
              (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
     }
 
+    function isValidDanceVideo(data) {
+      return data.keys().hasAll(['title', 'originalSong', 'youtubeUrl', 'thumbnailUrl', 'releasedDate', 'smileComment', 'caramelComment', 'heartsCount', 'visible', 'sortOrder']) &&
+             data.keys().size() <= 11 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.originalSong is string && data.originalSong.size() <= 256 &&
+             data.youtubeUrl is string && data.youtubeUrl.size() <= 100000 &&
+             data.thumbnailUrl is string && data.thumbnailUrl.size() <= 100000 &&
+             data.releasedDate is string && data.releasedDate.size() <= 32 &&
+             data.smileComment is string && data.smileComment.size() <= 1000 &&
+             data.caramelComment is string && data.caramelComment.size() <= 1000 &&
+             data.heartsCount is int &&
+             data.visible is bool &&
+             data.sortOrder is int &&
+             (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidMusicTrack(data) {
+      return data.keys().hasAll(['title', 'composer', 'notes', 'likes', 'visible', 'sortOrder']) &&
+             data.keys().size() <= 7 &&
+             data.title is string && data.title.size() <= 128 &&
+             data.composer is string && data.composer.size() <= 128 &&
+             data.notes is list && data.notes.size() <= 128 &&
+             data.likes is int &&
+             data.visible is bool &&
+             data.sortOrder is int &&
+             (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidMemberProfile(data) {
+      return data.keys().hasAll(['name', 'jpName', 'color', 'subColor', 'signature', 'tagline', 'birthday', 'bloodType', 'likes', 'dislikes', 'message', 'stickerStyle']) &&
+             data.keys().size() <= 13 &&
+             data.name is string && data.name.size() <= 64 &&
+             data.jpName is string && data.jpName.size() <= 64 &&
+             data.color is string && data.color.size() <= 32 &&
+             data.subColor is string && data.subColor.size() <= 32 &&
+             data.signature is string && data.signature.size() <= 256 &&
+             data.tagline is string && data.tagline.size() <= 512 &&
+             data.birthday is string && data.birthday.size() <= 128 &&
+             data.bloodType is string && data.bloodType.size() <= 128 &&
+             data.likes is list && data.likes.size() <= 32 &&
+             data.dislikes is list && data.dislikes.size() <= 32 &&
+             data.message is string && data.message.size() <= 2000 &&
+             data.stickerStyle is string && data.stickerStyle.size() <= 256 &&
+             (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
     // Rules Matches
     match /photos/{photoId} {
       allow read: if true;
@@ -148,6 +194,26 @@ service cloud.firestore {
       allow create: if isAdmin() && isValidLetter(request.resource.data) && isValidId(letterId);
       allow update: if isAdmin() && isValidLetter(request.resource.data) && isValidId(letterId);
       allow delete: if isAdmin();
+    }
+
+    match /dance_videos/{videoId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidDanceVideo(request.resource.data) && isValidId(videoId);
+      allow delete: if isAdmin();
+    }
+
+    match /music_tracks/{trackId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidMusicTrack(request.resource.data) && isValidId(trackId);
+      allow delete: if isAdmin();
+    }
+
+    match /member_profiles/{profileId} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        (profileId == 'smile' || profileId == 'caramel') &&
+        isValidMemberProfile(request.resource.data);
+      allow delete: if false;
     }
 
     match /daily_stats/{dateStr} {

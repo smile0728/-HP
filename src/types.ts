@@ -24,6 +24,18 @@ export interface DanceVideo {
   smileComment: string;
   caramelComment: string;
   heartsCount: number;
+  visible?: boolean;
+  sortOrder?: number;
+}
+
+export interface MusicTrack {
+  id: string;
+  title: string;
+  composer: string;
+  notes: Array<{ note: number; duration: number }>;
+  likes: number;
+  visible?: boolean;
+  sortOrder?: number;
 }
 
 export interface DiaryEntry {
