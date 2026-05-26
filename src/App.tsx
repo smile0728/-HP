@@ -24,8 +24,8 @@ import { DANCE_VIDEOS } from './data';
 import { DanceVideo } from './types';
 
 // Site images served from public/
-const MainVisualImg = "/picture/あろはーずメインビジュアル.png";
-const LogoImg = "/picture/%E3%81%82%E3%82%8D%E3%81%AF%E3%83%BC%E3%81%9A%E3%80%80%E3%83%AD%E3%82%B4%E3%82%B5%E3%83%B3%E3%83%97%E3%83%AB.svg";
+const MainVisualImg = "/picture/main-visual.png";
+const LogoImg = "/picture/logo.svg";
 const Announcements = lazy(() => import('./components/Announcements'));
 const ExchangeDiary = lazy(() => import('./components/ExchangeDiary'));
 const FortuneGame = lazy(() => import('./components/FortuneGame'));
@@ -335,7 +335,7 @@ export default function App() {
                 <div className="absolute -top-3 -right-3 text-4xl animate-bounce">🌻</div>
                 <div className="absolute -bottom-3 -left-3 text-4xl animate-bounce" style={{ animationDelay: '300ms' }}>🧸</div>
 
-                <div className="overflow-hidden rounded-2xl border-2 border-dark-charcoal ">
+                <div className="h-full overflow-hidden rounded-2xl border-2 border-dark-charcoal">
                   <img 
                     src={MainVisualImg} 
                     alt="あろはーず 2人のビジュアル" 
