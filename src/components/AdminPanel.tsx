@@ -669,10 +669,10 @@ export default function AdminPanel() {
             <p className="text-[10px] font-mono font-black text-dark-charcoal/40 uppercase tracking-widest mb-3 px-1 border-b border-stone-100 pb-1">
               🏢 コンテンツ管理メニュー
             </p>
-            <nav className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+            <nav className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-col gap-1.5">
               <button
                 onClick={() => { setActiveTab('dashboard'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'dashboard'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -683,7 +683,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('announcements'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'announcements'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -694,7 +694,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('diary'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'diary'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -705,7 +705,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('photos'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'photos'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -716,7 +716,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('videos'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'videos'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -727,7 +727,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('music'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'music'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -738,7 +738,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('profiles'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'profiles'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -749,7 +749,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('gacha'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'gacha'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
@@ -760,7 +760,7 @@ export default function AdminPanel() {
 
               <button
                 onClick={() => { setActiveTab('letters'); }}
-                className={`w-full text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-xs flex items-center gap-2 shrink-0 cursor-pointer ${
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
                   activeTab === 'letters'
                     ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
                     : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
