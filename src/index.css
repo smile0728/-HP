@@ -13,6 +13,14 @@
   --color-dark-charcoal: #4A2C2A;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* Custom utility styles for retro pop visuals */
 @utility candy-shadow {
   box-shadow: 0 8px 0px 0px rgba(255, 140, 0, 0.3);

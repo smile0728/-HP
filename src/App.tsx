@@ -207,7 +207,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen text-dark-charcoal dotted-bg font-sans scroll-smooth relative select-none">
+    <div className="min-h-screen text-dark-charcoal dotted-bg font-sans scroll-smooth relative select-none overflow-x-hidden">
       {/* Loading Splash overlay */}
       <AnimatePresence>
         {isLoading && (
@@ -289,7 +289,7 @@ export default function App() {
       {!isLoading && (
         <>
           {/* Sticky Navigation Bar */}
-          <div className="sticky top-0 z-50 bg-brand-cream/90 backdrop-blur-md border-b-4 border-dark-charcoal py-3 px-4 shadow-[0_4px_0_rgba(74,44,42,0.15)] flex flex-col md:flex-row justify-between items-center gap-3">
+          <div className="sticky top-0 z-50 bg-brand-cream/90 backdrop-blur-md border-b-4 border-dark-charcoal py-3 px-3 sm:px-4 shadow-[0_4px_0_rgba(74,44,42,0.15)] flex flex-col md:flex-row justify-between items-center gap-3">
             {/* Left logo / mini-brand */}
             <div 
               className="flex items-center gap-2 cursor-pointer transition-transform hover:scale-105" 
@@ -302,7 +302,7 @@ export default function App() {
               <span className="text-[10px] font-black text-dark-charcoal font-sans hidden md:inline-block tracking-widest opacity-85">CANDY POP NAVI</span>
             </div>
             {/* Nav buttons */}
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 justify-center w-full md:w-auto">
               {[
                 { label: '🎦 シアター', id: 'videos', shadowColor: '#FF8C00' },
                 { label: '🌻 プロフィール', id: 'profiles', shadowColor: '#FF69B4' },
@@ -326,7 +326,7 @@ export default function App() {
                       });
                     }
                   }}
-                  className="bg-white border-2 border-dark-charcoal rounded-full px-3 py-1 text-xs font-black text-dark-charcoal transition-all hover:translate-y-[-1px] active:translate-y-[1px] cursor-pointer"
+                  className="bg-white border-2 border-dark-charcoal rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-black text-dark-charcoal transition-all hover:translate-y-[-1px] active:translate-y-[1px] cursor-pointer"
                   style={{ boxShadow: `2.5px 2.5px 0px ${item.shadowColor}` }}
                 >
                   {item.label}
@@ -335,25 +335,25 @@ export default function App() {
             </div>
           </div>
 
-          <main className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-12 relative">
+          <main className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 flex flex-col gap-10 sm:gap-12 relative overflow-hidden">
           
           {/* Section ① HERO FIRST VIEW */}
-          <section className="flex flex-col lg:flex-row gap-8 items-center bg-brand-cream/80 border-4 border-dark-charcoal p-6 rounded-3xl shadow-[6px_6px_0_#4A3E3D] relative overflow-hidden mt-4">
+          <section className="w-full min-w-0 flex flex-col lg:flex-row gap-6 lg:gap-8 items-center bg-brand-cream/80 border-4 border-dark-charcoal p-4 sm:p-6 rounded-3xl shadow-[4px_4px_0_#4A3E3D] sm:shadow-[6px_6px_0_#4A3E3D] relative overflow-hidden mt-4">
             
             {/* Gloss shine card design details */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
 
             {/* Left Side: Generated Character Illustration within retro border */}
-            <div className="w-full lg:w-1/2 flex flex-col items-center">
+            <div className="w-full min-w-0 lg:w-1/2 flex flex-col items-center">
               <motion.div 
                 initial={{ rotate: -2, scale: 0.95 }}
                 animate={{ rotate: [-2, 1, -2] }}
                 transition={{ repeat: Infinity, duration: 8, ease: 'easeInOut' }}
-                className="p-4 bg-white border-4 border-dark-charcoal rounded-3xl shadow-[5px_8px_0_rgba(255,158,0,0.3)] relative group w-full max-w-xl aspect-[16/9]"
+                className="p-3 sm:p-4 bg-white border-4 border-dark-charcoal rounded-3xl shadow-[4px_5px_0_rgba(255,158,0,0.3)] sm:shadow-[5px_8px_0_rgba(255,158,0,0.3)] relative group w-full max-w-xl aspect-[16/9]"
               >
                 {/* Visual sticker badges overlapping the frame */}
-                <div className="absolute -top-3 -right-3 text-4xl animate-bounce">🌻</div>
-                <div className="absolute -bottom-3 -left-3 text-4xl animate-bounce" style={{ animationDelay: '300ms' }}>🧸</div>
+                <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 text-3xl sm:text-4xl animate-bounce">🌻</div>
+                <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 text-3xl sm:text-4xl animate-bounce" style={{ animationDelay: '300ms' }}>🧸</div>
 
                 <div className="h-full overflow-hidden rounded-2xl border-2 border-dark-charcoal">
                   <img 
@@ -367,11 +367,11 @@ export default function App() {
             </div>
 
             {/* Right Side: Logo, Copy & SNS links box */}
-            <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left gap-4 justify-center">
+            <div className="w-full min-w-0 lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left gap-4 justify-center">
               {/* Logo Sticker */}
               <div 
                 onClick={handleLogoClick}
-                className="relative max-w-[280px] cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200 select-none group"
+                className="relative w-full max-w-[240px] sm:max-w-[280px] cursor-pointer hover:scale-105 sm:hover:scale-110 active:scale-95 transition-all duration-200 select-none group"
                 title="何度もクリックしてみてね！"
               >
                 {/* Hint banner */}
@@ -389,7 +389,7 @@ export default function App() {
 
               {/* Main Slogan Catchphrases */}
               <div className="space-y-1 mt-2">
-                <h2 className="text-3xl font-display font-black text-dark-charcoal leading-tight drop-shadow-sm">
+                <h2 className="text-2xl sm:text-3xl font-display font-black text-dark-charcoal leading-tight drop-shadow-sm">
                   「ようこそあろはーずの秘密基地へ！」
                 </h2>
                 <p className="text-brand-pink font-semibold text-sm tracking-widest font-display animate-pulse">
@@ -439,21 +439,21 @@ export default function App() {
           </section>
 
           {/* Section ② LATEST VIDEO & CASSETTE AUDIO COLUMN */}
-          <section id="videos" className="bg-brand-orange/10 border-4 border-dark-charcoal p-6 rounded-3xl shadow-[6px_6px_0_#4A3E3D] relative flex flex-col md:flex-row gap-8 items-center md:items-stretch">
+          <section id="videos" className="w-full min-w-0 bg-brand-orange/10 border-4 border-dark-charcoal p-4 sm:p-6 rounded-3xl shadow-[4px_4px_0_#4A3E3D] sm:shadow-[6px_6px_0_#4A3E3D] relative overflow-hidden flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-stretch">
             
             {/* Title icon */}
-            <div className="absolute -top-5 left-8 bg-brand-orange border-2 border-dark-charcoal rounded-full px-4 py-1.5 font-sans font-extrabold text-sm text-white shadow-[2px_2px_0_#4A3E3D] flex items-center gap-1">
+            <div className="absolute top-3 left-4 sm:left-6 bg-brand-orange border-2 border-dark-charcoal rounded-full px-3 sm:px-4 py-1 sm:py-1.5 font-sans font-extrabold text-xs sm:text-sm text-white shadow-[2px_2px_0_#4A3E3D] flex items-center gap-1">
               <Tv size={14} /> 映像 & 音楽シアター
             </div>
 
             {/* Left side: Retro CRT visual display showing selected cover video */}
-            <div className="flex-1 flex flex-col gap-4">
-              <h3 className="text-xl font-display font-black text-dark-charcoal text-left mt-2 pl-1">
+            <div className="w-full min-w-0 md:flex-1 flex flex-col gap-4">
+              <h3 className="text-lg sm:text-xl font-display font-black text-dark-charcoal text-left mt-12 sm:mt-12 pl-1">
                 🎥 踊ってみた最新映像
               </h3>
 
               {/* Retro Heisei TV Monitor console */}
-              <div className="bg-stone-800 border-4 border-dark-charcoal rounded-2xl p-4 flex flex-col justify-between shadow-[4px_4px_0_#4A3E3D] relative aspect-video overflow-hidden min-h-[220px]">
+              <div className="w-full min-w-0 bg-stone-800 border-4 border-dark-charcoal rounded-2xl p-3 sm:p-4 flex flex-col justify-between shadow-[3px_3px_0_#4A3E3D] sm:shadow-[4px_4px_0_#4A3E3D] relative overflow-hidden">
                 {/* TV screen glass glossy overlay */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-10" />
 
@@ -461,7 +461,7 @@ export default function App() {
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,6px_100%] pointer-events-none z-10" />
 
                 {/* Simulated Playing display or Playable screen */}
-                <div className="w-full h-full rounded border-2 border-dark-charcoal bg-black relative flex items-center justify-center overflow-hidden flex-1">
+                <div className="w-full aspect-video rounded border-2 border-dark-charcoal bg-black relative flex items-center justify-center overflow-hidden">
                   {activeVideo.youtubeUrl ? (
                     <iframe
                       src={activeVideoEmbedUrl}
@@ -483,7 +483,7 @@ export default function App() {
                 </div>
 
                 {/* TV controls board inside shell */}
-                <div className="flex justify-between items-center text-zinc-400 font-mono text-[9px] mt-2 border-t border-zinc-700 pt-2 z-10">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-zinc-400 font-mono text-[8px] sm:text-[9px] mt-2 border-t border-zinc-700 pt-2 z-10">
                   <span className="text-emerald-400 animate-pulse flex items-center gap-1 font-bold">● ALOHA-Z RECORDING ACTIVE</span>
                   <span>UTC: 2026/05/25</span>
                 </div>
@@ -499,11 +499,11 @@ export default function App() {
                 </div>
 
                 {/* Heart Button for like index */}
-                <div className="border-t border-dashed border-stone-200 pt-2 mt-1 flex justify-between items-center">
+                <div className="border-t border-dashed border-stone-200 pt-2 mt-1 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <span className="text-[10px] text-stone-500 font-bold font-mono">RELEASED: {activeVideo.releasedDate}</span>
                   <button
                     onClick={() => handleLikeVideo(activeVideo.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-dark-charcoal text-[11px] font-bold cursor-pointer transition-all ${
+                    className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-dark-charcoal text-[11px] font-bold cursor-pointer transition-all ${
                       hasLikedVideo[activeVideo.id]
                         ? 'bg-brand-pink text-white shadow-[1px_2px_0_#4A3E3D]'
                         : 'bg-stone-50 text-dark-charcoal hover:bg-stone-100 pl-3'
@@ -523,7 +523,7 @@ export default function App() {
                     <button
                       key={vid.id}
                       onClick={() => setActiveVideo(vid)}
-                      className={`text-left p-2 rounded-xl border-2 border-dark-charcoal transition-all text-[11px] font-bold cursor-pointer leading-tight flex items-center gap-2 ${
+                      className={`min-w-0 text-left p-2 rounded-xl border-2 border-dark-charcoal transition-all text-[11px] font-bold cursor-pointer leading-tight flex items-center gap-2 ${
                         activeVideo.id === vid.id
                           ? 'bg-brand-orange text-white'
                           : 'bg-white text-dark-charcoal hover:bg-orange-50/50'
@@ -535,7 +535,7 @@ export default function App() {
                         referrerPolicy="no-referrer"
                         className="w-10 h-10 object-cover rounded border border-dark-charcoal/20"
                       />
-                      <div className="truncate flex-1">
+                      <div className="truncate flex-1 min-w-0">
                         <span className="font-mono text-[8px] opacity-75">{vid.releasedDate}</span>
                         <div className="truncate font-semibold">{(vid.description || vid.title || '').replace('【あろはーず】', '').replace('踊ってみた', '')}</div>
                       </div>
@@ -547,8 +547,8 @@ export default function App() {
             </div>
 
             {/* Right side: Music Player Component */}
-            <div className="flex flex-col items-center justify-center p-2">
-              <h3 className="text-xl font-display font-black text-dark-charcoal text-center mb-4 self-center md:self-start flex items-center gap-1 md:pl-2">
+            <div className="w-full md:w-auto flex flex-col items-center justify-center p-0 sm:p-2">
+              <h3 className="text-lg sm:text-xl font-display font-black text-dark-charcoal text-center mb-4 self-center md:self-start flex items-center gap-1 md:pl-2">
                 🎵 コツコツ8bitプレイヤー
               </h3>
               <Suspense fallback={<SectionFallback />}>
@@ -559,12 +559,12 @@ export default function App() {
           </section>
 
           {/* Section ③ MEMBER DETAILED PROFILE BOOK */}
-          <section id="profiles" className="flex flex-col items-center gap-4">
+          <section id="profiles" className="w-full min-w-0 flex flex-col items-center gap-4">
             <div className="text-center mb-2">
               <span className="text-xs font-bold font-mono tracking-widest text-brand-pink bg-pink-100/60 px-2.5 py-1 rounded-full border border-pink-200">
                 PROFILES
               </span>
-              <h2 className="text-3xl font-display font-black text-dark-charcoal mt-2">
+              <h2 className="text-2xl sm:text-3xl font-display font-black text-dark-charcoal mt-2 leading-tight">
                 あろはーずの２人を紹介！ 🌸
               </h2>
             </div>
@@ -575,21 +575,21 @@ export default function App() {
           </section>
 
           {/* Section ④ EXCHANGE DIARY */}
-          <section id="diary" className="flex flex-col items-center gap-4">
+          <section id="diary" className="w-full min-w-0 flex flex-col items-center gap-4">
             <Suspense fallback={<SectionFallback />}>
               <ExchangeDiary />
             </Suspense>
           </section>
 
           {/* Section ⑤ DRAGGABLE PHOTO COLLAGE BOARD */}
-          <section id="gallery" className="flex flex-col items-center gap-4">
+          <section id="gallery" className="w-full min-w-0 flex flex-col items-center gap-4">
             <Suspense fallback={<SectionFallback />}>
               <Gallery />
             </Suspense>
           </section>
 
           {/* Section ⑥ INTERACTIVE O-MIKUJI GACHAMACHINE */}
-          <section id="fortune" className="flex flex-col items-center justify-center">
+          <section id="fortune" className="w-full min-w-0 flex flex-col items-center justify-center">
             <Suspense fallback={<SectionFallback />}>
               <FortuneGame />
             </Suspense>

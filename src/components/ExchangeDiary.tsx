@@ -131,7 +131,7 @@ export default function ExchangeDiary() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-12 rounded-3xl arcade-border relative flex flex-col items-center justify-center min-h-[350px]">
+      <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-6 sm:p-12 rounded-3xl arcade-border relative flex flex-col items-center justify-center min-h-[280px] sm:min-h-[350px]">
         <div className="text-dark-charcoal text-sm font-black animate-pulse flex items-center gap-2">
           📓 交換日記をひらいています...🧸
         </div>
@@ -141,7 +141,7 @@ export default function ExchangeDiary() {
 
   if (entries.length === 0 || !activeEntry) {
     return (
-      <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-12 rounded-3xl arcade-border relative flex flex-col items-center justify-center min-h-[350px]">
+      <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-6 sm:p-12 rounded-3xl arcade-border relative flex flex-col items-center justify-center min-h-[280px] sm:min-h-[350px]">
         <div className="text-dark-charcoal text-sm font-black">
           📓 交換日記はまだ書かれていません。これからお楽しみに！🌻
         </div>
@@ -150,14 +150,14 @@ export default function ExchangeDiary() {
   }
 
   return (
-    <div className="w-full max-w-4xl bg-[#FCF8F2] border-4 border-dark-charcoal p-6 rounded-3xl arcade-border relative flex flex-col gap-6">
+    <div className="w-full max-w-4xl min-w-0 bg-[#FCF8F2] border-4 border-dark-charcoal p-4 sm:p-6 rounded-3xl arcade-border relative overflow-hidden flex flex-col gap-6">
       {/* Tape on corners */}
       <div className="absolute -top-3 -left-3 w-16 h-8 bg-brand-orange/40 border border-dashed border-dark-charcoal rounded-sm rotate-[-15deg] pointer-events-none" />
       <div className="absolute -top-3 -right-3 w-16 h-8 bg-brand-pink/40 border border-dashed border-dark-charcoal rounded-sm rotate-[15deg] pointer-events-none" />
 
       {/* Ribbon Header banner */}
       <div className="text-center">
-        <h3 className="text-3xl font-display font-black text-dark-charcoal flex items-center justify-center gap-2">
+        <h3 className="text-2xl sm:text-3xl font-display font-black text-dark-charcoal flex items-center justify-center gap-2 leading-tight">
           📓 あろはーず秘密の交換日記
         </h3>
         <p className="text-xs text-dark-charcoal/70 mt-1.5 font-bold">
@@ -165,19 +165,19 @@ export default function ExchangeDiary() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 min-w-0">
         {/* Left column: Entries selector list */}
         <div className="lg:col-span-4 flex flex-col gap-2.5">
           <span className="text-xs font-mono font-bold text-dark-charcoal/60 flex items-center gap-1">
             <BookOpen size={14} className="text-brand-orange" /> DIARY LOGS（過去の日記）
           </span>
 
-          <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-col gap-2 pb-2 lg:pb-0">
             {entries.map((entry) => (
               <button
                 key={entry.id}
                 onClick={() => setSelectedEntryId(entry.id)}
-                className={`flex-shrink-0 text-left px-4 py-2.5 rounded-xl border-2 border-dark-charcoal transition-all text-xs font-bold leading-tight cursor-pointer ${
+                className={`min-w-0 text-left px-4 py-2.5 rounded-xl border-2 border-dark-charcoal transition-all text-xs font-bold leading-tight cursor-pointer ${
                   selectedEntryId === entry.id
                     ? 'bg-brand-orange text-white shadow-[2px_2px_0_#4A3E3D]'
                     : 'bg-white text-dark-charcoal hover:bg-orange-50/50'
@@ -196,13 +196,13 @@ export default function ExchangeDiary() {
         </div>
 
         {/* Right column: Selected diary layout */}
-        <div className="lg:col-span-8 bg-white border-4 border-dark-charcoal p-5 rounded-2xl shadow-[inset_4px_4px_0_rgba(0,0,0,0.05),4px_4px_0_#4A3E3D] relative overflow-hidden flex flex-col justify-between min-h-[350px]">
+        <div className="lg:col-span-8 min-w-0 bg-white border-4 border-dark-charcoal p-4 sm:p-5 rounded-2xl shadow-[inset_4px_4px_0_rgba(0,0,0,0.05),3px_3px_0_#4A3E3D] sm:shadow-[inset_4px_4px_0_rgba(0,0,0,0.05),4px_4px_0_#4A3E3D] relative overflow-hidden flex flex-col justify-between min-h-[320px] sm:min-h-[350px]">
           {/* Lined notebook decoration behind */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:100%_28px] opacity-40 pointer-events-none mt-12" />
 
           <div className="relative z-10 flex flex-col gap-4">
             {/* Header metadata */}
-            <div className="flex justify-between items-center border-b-2 border-dark-charcoal pb-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b-2 border-dark-charcoal pb-2">
               <div>
                 <span className="text-[10px] font-mono font-bold text-dark-charcoal/60 bg-stone-100 px-2 py-0.5 rounded-full border border-stone-200">
                   {activeEntry.date}

@@ -595,13 +595,13 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
   };
 
   return (
-    <div className="flex flex-col gap-8 w-full max-w-4xl mx-auto">
+    <div className="flex flex-col gap-8 w-full max-w-4xl min-w-0 mx-auto">
       
       {/* 2-Column Retro Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start min-w-0">
         
         {/* Left Column: Visual Capsule Vending Machine */}
-        <div className="lg:col-span-5 bg-white border-4 border-dark-charcoal p-6 rounded-3xl alarm-shadow relative">
+        <div className="lg:col-span-5 min-w-0 bg-white border-4 border-dark-charcoal p-4 sm:p-6 rounded-3xl alarm-shadow relative overflow-hidden">
           {/* Paper staple decor */}
           <div className="absolute top-2 left-6 right-6 h-1 flex justify-between pointer-events-none">
             <div className="w-12 h-3 bg-stone-300 rounded-sm -mt-2.5 opacity-60"></div>
@@ -609,10 +609,10 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
           </div>
 
           <div className="text-center mb-4 mt-2">
-            <span className="inline-block bg-brand-orange text-white font-black text-xs px-3 py-1 rounded-full uppercase tracking-widest mb-1.5 shadow-sm">
+            <span className="inline-block bg-brand-orange text-white font-black text-[11px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-widest mb-1.5 shadow-sm">
               ONCE A DAY LIMIT 🍬
             </span>
-            <h3 className="text-xl font-display font-black text-dark-charcoal">
+            <h3 className="text-lg sm:text-xl font-display font-black text-dark-charcoal leading-tight">
               🔮 あろはーずおみくじガチャ
             </h3>
             <p className="text-[11px] text-dark-charcoal/60 font-semibold mt-1">
@@ -622,7 +622,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
 
           {/* Vending machine graphic */}
           <div className="flex flex-col items-center">
-            <div className="w-56 h-72 bg-[#FCF8EB] rounded-3xl border-4 border-dark-charcoal p-3.5 flex flex-col justify-between shadow-[inset_-4px_-8px_0_rgba(0,0,0,0.06),5px_5px_0px_#4A2C2A] relative overflow-hidden mb-4 bg-dot-grid">
+            <div className="w-full max-w-[14rem] h-72 bg-[#FCF8EB] rounded-3xl border-4 border-dark-charcoal p-3.5 flex flex-col justify-between shadow-[inset_-4px_-8px_0_rgba(0,0,0,0.06),4px_4px_0px_#4A2C2A] sm:shadow-[inset_-4px_-8px_0_rgba(0,0,0,0.06),5px_5px_0px_#4A2C2A] relative overflow-hidden mb-4 bg-dot-grid">
               
               {/* Glass dome loaded with capsules */}
               <div className="bg-gradient-to-b from-brand-cream/80 to-amber-100/40 border-2 border-dark-charcoal h-40 rounded-2xl flex flex-wrap content-start gap-1 p-1.5 overflow-hidden relative">
@@ -795,7 +795,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
         </div>
 
         {/* Right Column: Open Ballot Result slip details */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
+        <div className="lg:col-span-7 min-w-0 flex flex-col gap-6">
           <AnimatePresence mode="wait">
             {result ? (
               <motion.div
@@ -803,7 +803,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 initial={{ transform: 'scale(0.95)', opacity: 0 }}
                 animate={{ transform: 'scale(1)', opacity: 1 }}
                 exit={{ transform: 'scale(0.95)', opacity: 0 }}
-                className="bg-white border-4 border-dark-charcoal rounded-3xl p-6 shadow-[6px_6px_0px_#4A2C2A] relative overflow-hidden"
+                className="bg-white border-4 border-dark-charcoal rounded-3xl p-4 sm:p-6 shadow-[4px_4px_0px_#4A2C2A] sm:shadow-[6px_6px_0px_#4A2C2A] relative overflow-hidden"
               >
                 {/* Wobbly stamp sticker on upper right corner */}
                 <div className="absolute top-4 right-4 bg-brand-yellow text-dark-charcoal text-[9px] font-black tracking-widest uppercase border-2 border-dark-charcoal py-1 px-2.5 rounded shadow-sm rotate-12 z-10">
@@ -819,8 +819,8 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 </div>
 
                 <div className="mt-2 border-b-4 border-double border-dark-charcoal pb-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl md:text-4xl font-display font-black text-brand-pink bg-[#FCF8EB] border-2 border-dark-charcoal px-4 py-1.5 rounded-2xl shadow-[3px_3px_0px_#4A2C2A] rotate-[-2deg]">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <span className="self-start text-2xl sm:text-3xl md:text-4xl font-display font-black text-brand-pink bg-[#FCF8EB] border-2 border-dark-charcoal px-4 py-1.5 rounded-2xl shadow-[3px_3px_0px_#4A2C2A] rotate-[-2deg]">
                       {result.luckLevel}
                     </span>
                     <div>
@@ -961,7 +961,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 </p>
               </motion.div>
             ) : (
-              <div className="bg-[#FFFCE8] border-4 border-dashed border-brand-orange/40 rounded-3xl p-8 flex flex-col items-center justify-center text-center h-full min-h-[340px]">
+              <div className="bg-[#FFFCE8] border-4 border-dashed border-brand-orange/40 rounded-3xl p-5 sm:p-8 flex flex-col items-center justify-center text-center h-full min-h-[280px] sm:min-h-[340px]">
                 <div className="w-16 h-16 bg-white border-2 border-dark-charcoal rounded-full flex items-center justify-center text-3xl shadow-sm rotate-[-8deg] mb-3">
                   🔮
                 </div>
@@ -971,7 +971,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 <p className="text-xs text-dark-charcoal/65 font-bold max-w-sm mb-4">
                   左のガチャレバーをクリックして回すと、あなたへ向けたメッセージとお札画像が飛び出します！
                 </p>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap justify-center gap-1">
                   <span className="text-xs bg-brand-yellow font-bold text-dark-charcoal px-2.5 py-0.5 rounded-full">超大吉</span>
                   <span className="text-xs bg-brand-pink/20 text-brand-pink font-bold px-2.5 py-0.5 rounded-full">激吉</span>
                   <span className="text-xs bg-brand-orange/20 text-brand-orange font-bold px-2.5 py-0.5 rounded-full">まったり吉</span>
@@ -983,8 +983,8 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
       </div>
 
       {/* Collector Scrapbook Status Section */}
-      <div className="bg-[#FCF8EB] border-4 border-dark-charcoal p-5 md:p-6 rounded-3xl shadow-[5px_5px_0_#4A2C2A] relative overflow-hidden bg-dot-grid">
-        <h4 className="text-lg font-display font-black text-dark-charcoal border-b-2 border-dark-charcoal/20 pb-3 mb-4 flex items-center gap-2">
+      <div className="bg-[#FCF8EB] border-4 border-dark-charcoal p-4 sm:p-5 md:p-6 rounded-3xl shadow-[4px_4px_0_#4A2C2A] sm:shadow-[5px_5px_0_#4A2C2A] relative overflow-hidden bg-dot-grid">
+        <h4 className="text-base sm:text-lg font-display font-black text-dark-charcoal border-b-2 border-dark-charcoal/20 pb-3 mb-4 flex items-center gap-2 leading-tight">
           🎯 運勢コレクション図鑑 (全6種類)
         </h4>
 
@@ -1060,7 +1060,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                   }
                 }
               }}
-              className="px-5 py-2.5 bg-brand-yellow hover:bg-yellow-400 text-dark-charcoal font-black text-xs rounded-2xl border-3 border-dark-charcoal shadow-[3px_3px_0px_#4A2C2A] hover:-translate-y-0.5 active:translate-y-0 duration-150 cursor-pointer flex items-center gap-2"
+              className="w-full md:w-auto justify-center px-5 py-2.5 bg-brand-yellow hover:bg-yellow-400 text-dark-charcoal font-black text-xs rounded-2xl border-3 border-dark-charcoal shadow-[3px_3px_0px_#4A2C2A] hover:-translate-y-0.5 active:translate-y-0 duration-150 cursor-pointer flex items-center gap-2"
             >
               <Mail className="animate-bounce" size={16} />
               {showLetter ? '手紙を折りたたむ 💌' : '２人からの大事なお手紙を開く！ 💌'}
@@ -1068,7 +1068,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
           ) : (
             <button
               disabled
-              className="px-5 py-2.5 bg-zinc-200 border-2 border-dashed border-zinc-400 text-zinc-400 font-black text-xs rounded-2xl flex items-center gap-1.5 cursor-not-allowed"
+              className="w-full md:w-auto justify-center px-5 py-2.5 bg-zinc-200 border-2 border-dashed border-zinc-400 text-zinc-400 font-black text-xs rounded-2xl flex items-center gap-1.5 cursor-not-allowed"
             >
               <Lock size={14} /> ２人からの手紙（コンプでロック解除）
             </button>
@@ -1084,7 +1084,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 40 }}
             transition={{ type: 'spring', damping: 16, stiffness: 120 }}
-            className="bg-[#FFFDF4] border-4 border-dark-charcoal rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_#4A2C2A] relative overflow-hidden"
+            className="bg-[#FFFDF4] border-4 border-dark-charcoal rounded-3xl p-4 sm:p-6 md:p-8 shadow-[4px_4px_0px_#4A2C2A] sm:shadow-[8px_8px_0px_#4A2C2A] relative overflow-hidden"
           >
             {/* Scrapbook lace decoration */}
             <div className="absolute top-0 left-0 right-0 h-4 bg-brand-pink/20" />
@@ -1105,7 +1105,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
             </div>
 
             {/* Simulated cute lined notebook papers with custom handwritten remarks */}
-            <div className="bg-white border-2 border-dark-charcoal rounded-2xl p-6 md:p-8 relative shadow-[inset_0_4px_10px_rgba(0,0,0,0.04)]">
+            <div className="bg-white border-2 border-dark-charcoal rounded-2xl p-4 sm:p-6 md:p-8 relative shadow-[inset_0_4px_10px_rgba(0,0,0,0.04)]">
               {/* Notebook binding rings deco */}
               <div className="absolute top-4 inset-x-0 h-1 flex justify-around pointer-events-none px-12">
                 <div className="w-1.5 h-4 bg-stone-300 rounded"></div>
@@ -1166,12 +1166,12 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
               </div>
 
               {/* Hand-made deco drawings */}
-              <div className="flex justify-between items-center. mt-8 pt-4 border-t border-dashed border-dark-charcoal/20">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mt-8 pt-4 border-t border-dashed border-dark-charcoal/20">
                 <span className="text-[10px] font-bold text-stone-400 font-mono">
                   ALOHAZ-FANTRIBUTE-LETTER // MAY 2026
                 </span>
                 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <div className="bg-brand-yellow font-black text-[9px] px-3 py-1 rounded-full border border-dark-charcoal shadow-sm rotate-[4deg]">
                     💛 SMILE 100%
                   </div>

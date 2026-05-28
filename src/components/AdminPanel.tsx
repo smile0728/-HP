@@ -627,18 +627,18 @@ export default function AdminPanel() {
   // GRAPHICAL LAYOUT RENDERING
   // -----------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#FDFBF7] selection:bg-brand-pink/20 font-sans text-dark-charcoal">
+    <div className="min-h-screen bg-[#FDFBF7] selection:bg-brand-pink/20 font-sans text-dark-charcoal overflow-x-hidden">
       {/* Dynamic Dashboard Utility Bar */}
       <header className="bg-white border-b-4 border-dark-charcoal py-4 px-4 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs sticky top-0 z-30">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="bg-brand-orange text-white w-9 h-9 rounded-xl border-2 border-dark-charcoal flex items-center justify-center font-black animate-pulse shadow-[1px_1.5px_0_#4A2C2A]">
             👑
           </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-display font-black tracking-tight flex items-center gap-1.5">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-display font-black tracking-tight flex flex-wrap items-center gap-1.5 leading-tight">
               あろはーず運営室 <span className="text-[10px] font-bold text-brand-pink bg-rose-50 px-2 py-0.5 border border-brand-pink/20 rounded-full">本人認証済</span>
             </h1>
-            <p className="text-[10px] text-dark-charcoal/50 font-bold uppercase tracking-wider font-mono">
+            <p className="text-[10px] text-dark-charcoal/50 font-bold uppercase tracking-wider font-mono truncate max-w-[72vw] sm:max-w-none">
               Admin Control center // {isSimulatedAdmin ? "SIMULATORFALLBACK" : user?.email}
             </p>
           </div>
@@ -662,7 +662,7 @@ export default function AdminPanel() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-12 gap-7">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-5 sm:py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 overflow-hidden">
         {/* Navigation Rail Panel */}
         <aside className="lg:col-span-3 space-y-4">
           <div className="bg-white border-3 border-dark-charcoal p-4 rounded-3xl shadow-[3px_3px_0px_#4A2C2A]">

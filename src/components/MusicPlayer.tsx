@@ -64,21 +64,21 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="bg-amber-50 border-4 border-dark-charcoal p-5 rounded-3xl arcade-border max-w-sm w-full relative overflow-hidden flex flex-col items-center">
+    <div className="bg-amber-50 border-4 border-dark-charcoal p-4 sm:p-5 rounded-3xl arcade-border max-w-sm w-full min-w-0 relative overflow-hidden flex flex-col items-center">
       <div className="absolute top-2 right-2 flex gap-1 text-[10px] items-center text-amber-900 border border-amber-900/30 px-2 py-0.5 rounded-full bg-amber-100">
         <Radio size={12} className="animate-pulse" />
         <span className="font-mono">YOUTUBE</span>
       </div>
 
-      <div className="flex gap-2 items-center text-left self-start mb-4">
+      <div className="flex gap-2 items-center text-left self-start mb-4 min-w-0 pr-20">
         <Music className="text-brand-orange animate-bounce" size={24} />
-        <div>
+        <div className="min-w-0">
           <h4 className="text-sm font-display font-black text-dark-charcoal">あろはーず・YouTubeプレイヤー</h4>
           <span className="text-[10px] font-mono text-dark-charcoal/60">STREAM FROM YOUTUBE</span>
         </div>
       </div>
 
-      <div className="w-full bg-brand-orange rounded-xl border-4 border-dark-charcoal p-3 flex flex-col gap-3 shadow-[inset_-3px_-6px_0px_rgba(0,0,0,0.15)] relative">
+      <div className="w-full min-w-0 bg-brand-orange rounded-xl border-4 border-dark-charcoal p-3 flex flex-col gap-3 shadow-[inset_-3px_-6px_0px_rgba(0,0,0,0.15)] relative">
         <div className="flex items-center justify-between">
           <span className="text-[9px] font-mono font-semibold px-2 py-0.5 bg-dark-charcoal text-white rounded">NOW PLAYING</span>
           <span className="text-[9px] font-mono text-dark-charcoal font-black">TRACK {currentTrackIndex + 1}</span>
@@ -111,7 +111,7 @@ export default function MusicPlayer() {
         </div>
       </div>
 
-      <div className="w-full flex justify-between items-center mt-4 bg-brand-cream/80 border-2 border-dark-charcoal rounded-xl p-3 shadow-sm">
+      <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mt-4 bg-brand-cream/80 border-2 border-dark-charcoal rounded-xl p-3 shadow-sm">
         <div className="flex gap-2">
           <button
             onClick={() => stepTrack(-1)}
@@ -135,7 +135,7 @@ export default function MusicPlayer() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={handleHeartClick}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-dark-charcoal text-xs font-mono font-bold transition-all ${
@@ -163,12 +163,12 @@ export default function MusicPlayer() {
         <p className="flex-1 text-[10px] font-bold text-dark-charcoal/80 truncate">{currentTrack.description}</p>
       </div>
 
-      <div className="w-full grid grid-cols-2 gap-2 mt-3">
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
         {tracks.map((track, index) => (
           <motion.button
             key={track.id}
             onClick={() => setCurrentTrackIndex(index)}
-            className={`flex items-center gap-2 p-2 rounded-xl border-2 border-dark-charcoal text-left text-[10px] font-bold cursor-pointer ${
+            className={`min-w-0 flex items-center gap-2 p-2 rounded-xl border-2 border-dark-charcoal text-left text-[10px] font-bold cursor-pointer ${
               currentTrack.id === track.id ? 'bg-brand-orange text-white' : 'bg-white text-dark-charcoal hover:bg-orange-50'
             }`}
           >
@@ -178,7 +178,7 @@ export default function MusicPlayer() {
               className="w-9 h-9 rounded-md object-cover border border-dark-charcoal/20"
               referrerPolicy="no-referrer"
             />
-            <span className="truncate">{track.title || track.description}</span>
+            <span className="truncate min-w-0">{track.title || track.description}</span>
           </motion.button>
         ))}
       </div>

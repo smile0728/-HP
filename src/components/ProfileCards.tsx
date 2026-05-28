@@ -19,7 +19,7 @@ export default function ProfileCards() {
   }, []);
 
   return (
-    <div className="w-full max-w-2xl bg-white border-4 border-dark-charcoal p-6 rounded-3xl arcade-border relative overflow-hidden">
+    <div className="w-full max-w-2xl min-w-0 bg-white border-4 border-dark-charcoal p-4 sm:p-6 rounded-3xl arcade-border relative overflow-hidden">
       {/* Decorative notebook binders design on top to mimic a profiles notebook binding */}
       <div className="absolute top-0 inset-x-0 h-4 flex justify-around px-8">
         {Array.from({ length: 12 }).map((_, i) => (
@@ -27,14 +27,14 @@ export default function ProfileCards() {
         ))}
       </div>
 
-      <div className="mt-4 flex flex-col md:flex-row gap-6">
+      <div className="mt-4 flex flex-col md:flex-row gap-5 sm:gap-6 min-w-0">
         {/* Left Side: Photo panel & tabs picker */}
         <div className="flex flex-col items-center gap-4 w-full md:w-1/3">
           {/* Tabs switch panel (designed like stickers) */}
-          <div className="flex gap-2 w-full justify-center">
+          <div className="flex flex-wrap gap-2 w-full justify-center">
             <button
               onClick={() => setActiveTab('smile')}
-              className={`px-4 py-2 rounded-2xl border-2 border-dark-charcoal font-sans font-extrabold text-sm relative transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 rounded-2xl border-2 border-dark-charcoal font-sans font-extrabold text-xs sm:text-sm relative transition-all cursor-pointer ${
                 activeTab === 'smile'
                   ? 'bg-brand-orange text-white shadow-[2px_4px_0_#4A3E3D]'
                   : 'bg-orange-50 text-brand-orange hover:bg-orange-100'
@@ -48,7 +48,7 @@ export default function ProfileCards() {
 
             <button
               onClick={() => setActiveTab('caramel')}
-              className={`px-4 py-2 rounded-2xl border-2 border-dark-charcoal font-sans font-extrabold text-sm relative transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2 rounded-2xl border-2 border-dark-charcoal font-sans font-extrabold text-xs sm:text-sm relative transition-all cursor-pointer ${
                 activeTab === 'caramel'
                   ? 'bg-brand-pink text-white shadow-[2px_4px_0_#4A3E3D]'
                   : 'bg-rose-50 text-brand-pink hover:bg-rose-100'
@@ -92,7 +92,7 @@ export default function ProfileCards() {
         </div>
 
         {/* Right Side: Retro Profile Booklet contents */}
-        <div className="flex-1 flex flex-col justify-between">
+        <div className="w-full min-w-0 flex-1 flex flex-col justify-between">
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedMember.id}
@@ -100,7 +100,7 @@ export default function ProfileCards() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -15, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className={`p-5 rounded-2xl border-4 border-dark-charcoal flex flex-col gap-4 relative shadow-[4px_4px_0_#4A3E3D] ${
+              className={`p-4 sm:p-5 rounded-2xl border-4 border-dark-charcoal flex flex-col gap-4 relative shadow-[3px_3px_0_#4A3E3D] sm:shadow-[4px_4px_0_#4A3E3D] ${
                 selectedMember.id === 'smile' ? 'bg-amber-50/50' : 'bg-rose-50/50'
               }`}
             >
@@ -113,9 +113,9 @@ export default function ProfileCards() {
 
               {/* Title Header */}
               <div>
-                <div className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1">
                   <span className="text-xl">{selectedMember.id === 'smile' ? '🌻' : '🧸'}</span>
-                  <h3 className="text-2xl font-display font-black text-dark-charcoal">
+                  <h3 className="text-xl sm:text-2xl font-display font-black text-dark-charcoal leading-tight">
                     {selectedMember.jpName} <span className="text-sm font-normal text-stone-500">（{selectedMember.name}）</span>
                   </h3>
                 </div>

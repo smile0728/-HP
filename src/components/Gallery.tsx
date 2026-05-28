@@ -94,16 +94,16 @@ export default function Gallery() {
   const currentSelectedPhoto = selectedPhotoIndex !== null ? photos[selectedPhotoIndex] || photos[0] || null : null;
 
   return (
-    <div className="w-full max-w-4xl bg-orange-50/20 border-4 border-dark-charcoal p-4 md:p-6 rounded-3xl arcade-border relative flex flex-col gap-6">
+    <div className="w-full max-w-4xl min-w-0 bg-orange-50/20 border-4 border-dark-charcoal p-4 md:p-6 rounded-3xl arcade-border relative overflow-hidden flex flex-col gap-6">
       
       {/* Album Header Deco */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-4 border-double border-dark-charcoal/30 pb-4 gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="bg-brand-pink p-2 rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0px_#4A2C2A] text-white">
             <BookOpen size={24} />
           </div>
-          <div>
-            <h3 className="text-xl md:text-2xl font-display font-black text-dark-charcoal tracking-tight flex items-center gap-2">
+          <div className="min-w-0">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-display font-black text-dark-charcoal tracking-tight flex items-center gap-2 leading-tight">
               📖 あろはーず思い出フォトアルバム
             </h3>
             <p className="text-[10px] text-dark-charcoal/60 font-semibold font-mono tracking-wider">
@@ -113,7 +113,7 @@ export default function Gallery() {
         </div>
 
         {/* Categories Tab Selectors in cute sticker buttons */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {[
             { id: 'all', label: 'すべて ✨' },
             { id: 'activity', label: 'ダンス・イベント 💃' },
@@ -122,7 +122,7 @@ export default function Gallery() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-1 text-xs font-black rounded-full border-2 border-dark-charcoal transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-black rounded-full border-2 border-dark-charcoal transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer ${
                 activeTab === tab.id
                   ? 'bg-brand-orange text-white shadow-[2px_2px_0px_#4A2C2A]'
                   : 'bg-white text-dark-charcoal hover:bg-orange-50'
@@ -140,7 +140,7 @@ export default function Gallery() {
       </p>
 
       {/* Album Content View - Looks like a vintage paper/ring notebook layout */}
-      <div className="relative bg-[#FCF8EB] border-4 border-dark-charcoal rounded-3xl p-6 md:p-8 shadow-[inset_0_4px_10px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="relative bg-[#FCF8EB] border-4 border-dark-charcoal rounded-3xl p-4 sm:p-6 md:p-8 shadow-[inset_0_4px_10px_rgba(0,0,0,0.06)] overflow-hidden">
         
         {/* Ring lines simulation / Binder rings at the top */}
         <div className="absolute top-0 left-0 right-0 h-4 flex justify-around pointer-events-none select-none px-12">
@@ -159,7 +159,7 @@ export default function Gallery() {
             このカテゴリーの写真はまだありません 🍭
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 md:gap-8 pt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 md:gap-8 pt-4">
             {filteredPhotos.map((photo) => (
               <motion.div
                 key={photo.id}
@@ -170,7 +170,7 @@ export default function Gallery() {
                   boxShadow: '0 12px 25px rgba(74, 44, 42, 0.15)'
                 }}
                 onClick={() => handleOpenLightbox(photo.id)}
-                className="bg-white border-2 border-dark-charcoal rounded-xl p-3 shadow-[4px_4px_0px_#4A2C2A] flex flex-col justify-between cursor-pointer transition-shadow"
+                className="bg-white border-2 border-dark-charcoal rounded-xl p-2 sm:p-3 shadow-[3px_3px_0px_#4A2C2A] sm:shadow-[4px_4px_0px_#4A2C2A] flex flex-col justify-between cursor-pointer transition-shadow"
                 style={{ rotate: `${photo.rotation}deg` }}
               >
                 {/* Visual indicator (Sticky ribbon tape) */}
