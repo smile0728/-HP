@@ -13,7 +13,7 @@ service firebase.storage {
     match /managed_images/{folder}/{fileName} {
       allow read: if true;
       allow write: if isAdmin() &&
-        (folder == 'site' || folder == 'profiles') &&
+        (folder == 'site' || folder == 'profiles' || folder == 'fortunes') &&
         request.resource != null &&
         request.resource.size <= 5 * 1024 * 1024 &&
         (request.resource.contentType == 'image/png' ||

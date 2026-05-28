@@ -70,6 +70,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 const ADMIN_BUILD_MARKER = 'admin-auth-debug-2026-05-25-2';
+const MAX_FORTUNE_COUNT = 20;
 
 export default function AdminPanel() {
   const [user, setUser] = useState<User | null>(null);
@@ -495,6 +496,11 @@ export default function AdminPanel() {
       alert("必須項目（みくじ固有ID・運勢結果・解説文）を入力してね！🔮");
       return;
     }
+    const isNewFortune = !fortunes.some((item) => item.id === editingFortune.id);
+    if (isNewFortune && fortunes.length >= MAX_FORTUNE_COUNT) {
+      alert(`おみくじは最大${MAX_FORTUNE_COUNT}件まで登録できます。不要な項目を削除してから追加してください。`);
+      return;
+    }
     await saveFortune({
       id: editingFortune.id,
       season: editingFortune.season || '通年シーズン',
@@ -641,7 +647,7 @@ export default function AdminPanel() {
 
   const handleUploadImageFile = async (
     file: File | undefined,
-    folder: 'site' | 'profiles',
+    folder: 'site' | 'profiles' | 'fortunes',
     imageKey: string,
     onUploaded: (url: string) => void
   ) => {
@@ -1536,36 +1542,73 @@ export default function AdminPanel() {
                 <form onSubmit={handleSaveProfile} className="bg-white border-3 border-dark-charcoal p-5 rounded-3xl shadow-[4px_4px_0_#4A2C2A] space-y-4">
                   <h4 className="text-sm font-black text-brand-orange border-b border-stone-100 pb-1.5">プロフィール編集</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <select value={editingProfile.id || 'smile'} onChange={e => setEditingProfile({ ...editingProfile, id: e.target.value as 'smile' | 'caramel' })} className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold">
-                      <option value="smile">すまいる</option>
-                      <option value="caramel">きゃらめる</option>
-                    </select>
-                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="英字名" value={editingProfile.name || ''} onChange={e => setEditingProfile({ ...editingProfile, name: e.target.value })} />
-                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="日本語名" value={editingProfile.jpName || ''} onChange={e => setEditingProfile({ ...editingProfile, jpName: e.target.value })} />
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black text-dark-charcoal/60">編集するメンバー</label>
+                      <select value={editingProfile.id || 'smile'} onChange={e => setEditingProfile({ ...editingProfile, id: e.target.value as 'smile' | 'caramel' })} className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold">
+                        <option value="smile">すまいる</option>
+                        <option value="caramel">きゃらめる</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black text-dark-charcoal/60">英字名</label>
+                      <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="例: Smile" value={editingProfile.name || ''} onChange={e => setEditingProfile({ ...editingProfile, name: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black text-dark-charcoal/60">日本語名</label>
+                      <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="例: すまいる" value={editingProfile.jpName || ''} onChange={e => setEditingProfile({ ...editingProfile, jpName: e.target.value })} />
+                    </div>
                   </div>
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="キャッチコピー" value={editingProfile.tagline || ''} onChange={e => setEditingProfile({ ...editingProfile, tagline: e.target.value })} />
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="自己紹介画像URL（空欄ならイラスト表示）" value={editingProfile.imageUrl || ''} onChange={e => setEditingProfile({ ...editingProfile, imageUrl: e.target.value })} />
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    onChange={e => handleUploadImageFile(e.target.files?.[0], 'profiles', `profile-${editingProfile.id || 'member'}`, url => setEditingProfile({ ...editingProfile, imageUrl: url }))}
-                    className="block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
-                  />
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-dark-charcoal/60">キャッチコピー</label>
+                    <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="プロフィール上部に表示する一言" value={editingProfile.tagline || ''} onChange={e => setEditingProfile({ ...editingProfile, tagline: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-dark-charcoal/60">自己紹介画像URL</label>
+                    <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="空欄ならイラスト表示" value={editingProfile.imageUrl || ''} onChange={e => setEditingProfile({ ...editingProfile, imageUrl: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-dark-charcoal/60">自己紹介画像ファイル</label>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      onChange={e => handleUploadImageFile(e.target.files?.[0], 'profiles', `profile-${editingProfile.id || 'member'}`, url => setEditingProfile({ ...editingProfile, imageUrl: url }))}
+                      className="block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
+                    />
+                    <p className="text-[10px] text-dark-charcoal/45 font-bold">PNG/JPEG、5MB以下。選択後にアップロードURLが自動で入ります。</p>
+                  </div>
                   {uploadingImageKey === `profile-${editingProfile.id || 'member'}` && <p className="text-[10px] font-black text-brand-orange">アップロード中...</p>}
                   {editingProfile.imageUrl && (
                     <div className="w-40 h-40 bg-stone-50 border-2 border-dashed border-dark-charcoal/20 rounded-2xl overflow-hidden flex items-center justify-center">
                       <img src={editingProfile.imageUrl} alt="自己紹介画像プレビュー" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                   )}
-                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="サイン文" value={editingProfile.signature || ''} onChange={e => setEditingProfile({ ...editingProfile, signature: e.target.value })} />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="誕生日" value={editingProfile.birthday || ''} onChange={e => setEditingProfile({ ...editingProfile, birthday: e.target.value })} />
-                    <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="血液型" value={editingProfile.bloodType || ''} onChange={e => setEditingProfile({ ...editingProfile, bloodType: e.target.value })} />
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-dark-charcoal/60">サイン文</label>
+                    <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="例: 🌻すまいるハッピー！🌻" value={editingProfile.signature || ''} onChange={e => setEditingProfile({ ...editingProfile, signature: e.target.value })} />
                   </div>
-                  <textarea className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold h-24" placeholder="メッセージ" value={editingProfile.message || ''} onChange={e => setEditingProfile({ ...editingProfile, message: e.target.value })} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <textarea className="px-3 py-2 border-2 border-emerald-300 rounded-xl text-xs font-bold h-28" placeholder="好きなもの（一行にひとつ）" value={editingProfile.likesText || ''} onChange={e => setEditingProfile({ ...editingProfile, likesText: e.target.value })} />
-                    <textarea className="px-3 py-2 border-2 border-rose-300 rounded-xl text-xs font-bold h-28" placeholder="苦手なもの（一行にひとつ）" value={editingProfile.dislikesText || ''} onChange={e => setEditingProfile({ ...editingProfile, dislikesText: e.target.value })} />
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black text-dark-charcoal/60">誕生日</label>
+                      <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="例: 8月21日" value={editingProfile.birthday || ''} onChange={e => setEditingProfile({ ...editingProfile, birthday: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black text-dark-charcoal/60">血液型</label>
+                      <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="例: O型" value={editingProfile.bloodType || ''} onChange={e => setEditingProfile({ ...editingProfile, bloodType: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-dark-charcoal/60">本人メッセージ</label>
+                    <textarea className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold h-24" placeholder="ファン向けに表示する紹介メッセージ" value={editingProfile.message || ''} onChange={e => setEditingProfile({ ...editingProfile, message: e.target.value })} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black text-emerald-600">好きなもの</label>
+                      <textarea className="w-full px-3 py-2 border-2 border-emerald-300 rounded-xl text-xs font-bold h-28" placeholder="一行にひとつ入力" value={editingProfile.likesText || ''} onChange={e => setEditingProfile({ ...editingProfile, likesText: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black text-rose-500">苦手なもの</label>
+                      <textarea className="w-full px-3 py-2 border-2 border-rose-300 rounded-xl text-xs font-bold h-28" placeholder="一行にひとつ入力" value={editingProfile.dislikesText || ''} onChange={e => setEditingProfile({ ...editingProfile, dislikesText: e.target.value })} />
+                    </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2.5 border-t border-stone-100">
                     <button type="button" onClick={() => setEditingProfile(null)} className="px-4 py-2 bg-stone-100 border-2 border-dark-charcoal rounded-xl text-xs font-black cursor-pointer">キャンセル</button>
@@ -1595,10 +1638,16 @@ export default function AdminPanel() {
           {activeTab === 'gacha' && (
             <div className="space-y-5">
               <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
-                <h3 className="text-lg font-black flex items-center gap-1.5">🔮 おみくじ結果管理</h3>
+                <div>
+                  <h3 className="text-lg font-black flex items-center gap-1.5">🔮 おみくじ結果管理</h3>
+                  <p className="text-[10px] font-bold text-dark-charcoal/55 mt-1">
+                    画像と内容は最大{MAX_FORTUNE_COUNT}件まで登録できます。現在 {fortunes.length} / {MAX_FORTUNE_COUNT} 件
+                  </p>
+                </div>
                 <button
                   onClick={() => setEditingFortune({ id: '', season: '春シーズン', title: '', resultName: '', resultMessage: '', imageUrl: '', commentSmile: '', commentCaramel: '', luckyItem: '', luckyDance: '', ratingSmile: 3, ratingCaramel: 3, sortOrder: 9, visible: true })}
-                  className="px-4 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] flex items-center gap-1 hover:-translate-y-0.5 transition-transform shrink-0 cursor-pointer"
+                  disabled={fortunes.length >= MAX_FORTUNE_COUNT}
+                  className="px-4 py-2 bg-brand-orange disabled:bg-stone-300 disabled:text-stone-500 text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] flex items-center gap-1 hover:-translate-y-0.5 disabled:hover:translate-y-0 transition-transform shrink-0 cursor-pointer disabled:cursor-not-allowed"
                 >
                   <Plus size={14} /> おみくじ追加
                 </button>
@@ -1703,8 +1752,15 @@ export default function AdminPanel() {
                         className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold"
                         placeholder="https://... 画像のURLを貼り付け"
                       />
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        onChange={e => handleUploadImageFile(e.target.files?.[0], 'fortunes', `fortune-${editingFortune.id || 'new'}`, url => setEditingFortune({ ...editingFortune, imageUrl: url }))}
+                        className="mt-2 block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
+                      />
+                      {uploadingImageKey === `fortune-${editingFortune.id || 'new'}` && <p className="text-[10px] font-black text-brand-orange mt-1">アップロード中...</p>}
                       <p className="text-[10px] text-dark-charcoal/45 font-bold">
-                        未入力の場合は、これまで通り自動生成のお札画像を配布します。
+                        PNG/JPEGファイルも選択できます。未入力の場合は、これまで通り自動生成のお札画像を配布します。
                       </p>
                     </div>
                     <div className="h-28 bg-stone-50 border-2 border-dashed border-dark-charcoal/20 rounded-xl overflow-hidden flex items-center justify-center">

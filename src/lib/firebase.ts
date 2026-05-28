@@ -206,7 +206,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export const uploadManagedImage = async (file: File, folder: 'site' | 'profiles'): Promise<string> => {
+export const uploadManagedImage = async (file: File, folder: 'site' | 'profiles' | 'fortunes'): Promise<string> => {
   if (!['image/png', 'image/jpeg'].includes(file.type)) {
     throw new Error('PNGまたはJPEG画像のみアップロードできます。');
   }

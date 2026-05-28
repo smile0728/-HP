@@ -70,9 +70,10 @@ export interface FanComment {
 }
 
 export interface FortuneResult {
+  id?: string;
   title: string;
   description: string;
-  luckLevel: '超大吉' | '大吉' | '激吉' | '中吉' | '吉' | 'あろはーず吉';
+  luckLevel: string;
   imageUrl?: string;
   commentSmile: string;
   commentCaramel: string;

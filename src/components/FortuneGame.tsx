@@ -29,9 +29,13 @@ export default function FortuneGame() {
   const [showNameModal, setShowNameModal] = useState(false);
   const [fanAccountId, setFanAccountId] = useState<string | null>(null);
   const [gachaSaveStatus, setGachaSaveStatus] = useState<'loading' | 'cloud' | 'local'>('loading');
+  const collectionColors = ['bg-amber-400', 'bg-yellow-300', 'bg-pink-400', 'bg-orange-300', 'bg-emerald-400', 'bg-indigo-300', 'bg-sky-300', 'bg-lime-300', 'bg-rose-300', 'bg-violet-300'];
+  const collectionEmojis = ['✨', '🌻', '🧸', '☀️', '🍬', '💖', '⭐', '🎀', '🍭', '🌈'];
+  const getFortuneKey = (fortune: FortuneResult) => fortune.id || fortune.luckLevel;
 
   // Convert schema-level GachaFortune into FortuneResult format for compatibility
   const mapGachaFortuneToFortuneResult = (f: any): FortuneResult => ({
+    id: f.id,
     title: f.title,
     description: f.resultMessage,
     luckLevel: f.resultName as any,
@@ -279,9 +283,10 @@ export default function FortuneGame() {
     setTimeout(async () => {
       const randomIndex = Math.floor(Math.random() * fortunesList.length);
       const drawnFortune = fortunesList[randomIndex];
-      const nextCollection = collection.includes(drawnFortune.luckLevel)
+      const drawnKey = getFortuneKey(drawnFortune);
+      const nextCollection = collection.includes(drawnKey) || collection.includes(drawnFortune.luckLevel)
         ? collection
-        : [...collection, drawnFortune.luckLevel];
+        : [...collection, drawnKey];
       
       setResult(drawnFortune);
       setIsPlaying(false);
@@ -345,7 +350,18 @@ export default function FortuneGame() {
     });
   };
 
-  const isComplete = fortunesList.length > 0 ? collection.length >= fortunesList.length : collection.length >= 6;
+  const collectionSpots = fortunesList.slice(0, 20).map((fortune, index) => {
+    const id = getFortuneKey(fortune);
+    return {
+      id,
+      label: fortune.title || fortune.luckLevel,
+      resultName: fortune.luckLevel,
+      color: collectionColors[index % collectionColors.length],
+      emoji: collectionEmojis[index % collectionEmojis.length],
+    };
+  });
+  const collectedCount = collectionSpots.filter((spot) => collection.includes(spot.id) || collection.includes(spot.resultName)).length;
+  const isComplete = collectionSpots.length > 0 ? collectedCount >= collectionSpots.length : collection.length >= 6;
 
   const currentLetterData = lettersList.length > 0 ? lettersList[0] : null;
 
@@ -754,7 +770,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 <BookOpen size={12} className="text-brand-pink" /> 運勢コプリート進捗
               </span>
               <span className={`px-2.5 py-0.5 font-mono text-xs font-black rounded-full ${isComplete ? 'bg-emerald-400 text-white animate-bounce' : 'bg-brand-pink/20 text-brand-pink'}`}>
-                {collection.length} / {fortunesList.length || 6} 種類
+                {collectedCount} / {collectionSpots.length || 6} 種類
               </span>
             </div>
 
@@ -985,20 +1001,13 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
       {/* Collector Scrapbook Status Section */}
       <div className="bg-[#FCF8EB] border-4 border-dark-charcoal p-4 sm:p-5 md:p-6 rounded-3xl shadow-[4px_4px_0_#4A2C2A] sm:shadow-[5px_5px_0_#4A2C2A] relative overflow-hidden bg-dot-grid">
         <h4 className="text-base sm:text-lg font-display font-black text-dark-charcoal border-b-2 border-dark-charcoal/20 pb-3 mb-4 flex items-center gap-2 leading-tight">
-          🎯 運勢コレクション図鑑 (全6種類)
+          🎯 運勢コレクション図鑑 (全{collectionSpots.length || 6}種類)
         </h4>
 
-        {/* 6 unique fortune card spots */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 pt-1">
-          {[
-            { id: '超大吉', label: '全力超大吉', color: 'bg-amber-400', emoji: '✨👑' },
-            { id: '大吉', label: 'スマイル大吉', color: 'bg-yellow-300', emoji: '🌻💛' },
-            { id: '激吉', label: 'きゃらめる激吉', color: 'bg-pink-400', emoji: '🧸💖' },
-            { id: '中吉', label: 'ぽかぽか中吉', color: 'bg-orange-300', emoji: '☀️🍵' },
-            { id: '吉', label: 'ダンシング吉', color: 'bg-emerald-400', emoji: '🕺💚' },
-            { id: 'あろはーず吉', label: 'まったり吉', color: 'bg-indigo-300', emoji: '🍬☘️' },
-          ].map((spot) => {
-            const hasCollected = collection.includes(spot.id);
+        {/* Dynamic fortune card spots, managed from the admin screen */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+          {collectionSpots.map((spot) => {
+            const hasCollected = collection.includes(spot.id) || collection.includes(spot.resultName);
 
             return (
               <div
@@ -1011,12 +1020,12 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
               >
                 <div className="text-center">
                   <span className="text-[10px] b-full font-black text-dark-charcoal tracking-wide bg-white/60 px-1.5 py-0.2 rounded-full block border border-dark-charcoal/20">
-                    {spot.id}
+                    {spot.resultName}
                   </span>
                 </div>
 
                 <div className="my-2.5 text-2xl">
-                  {hasCollected ? spot.emoji.substring(2, 4) : '🔒'}
+                  {hasCollected ? spot.emoji : '🔒'}
                 </div>
 
                 <p className="text-[10px] font-black text-dark-charcoal text-center leading-tight">
@@ -1037,7 +1046,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 </span>
               ) : (
                 <span className="text-dark-charcoal/70 flex items-center gap-1 justify-center md:justify-start">
-                  <Star size={12} className="text-brand-orange" /> 6つの運勢をすべて1度以上引くと、2人から手書きの手紙（ファンレターのお返し）が届くよ！
+                  <Star size={12} className="text-brand-orange" /> 全{collectionSpots.length || 6}種類の運勢をすべて1度以上引くと、2人から手書きの手紙（ファンレターのお返し）が届くよ！
                 </span>
               )}
             </p>
