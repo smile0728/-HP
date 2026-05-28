@@ -23,9 +23,15 @@ import {
   increment,
   writeBatch
 } from 'firebase/firestore';
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL
+} from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DANCE_VIDEOS, MEMBERS } from '../data';
-import { DanceVideo, MemberProfile, MusicTrack } from '../types';
+import { DanceVideo, MemberProfile, MusicTrack, SiteImages } from '../types';
 import { toYouTubeThumbnailUrl } from './youtube';
 
 // Recognize if setup is using mocked keys
@@ -36,6 +42,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
 // Error handler specified by the Firebase skill requirements
@@ -127,9 +134,108 @@ const DEFAULT_MUSIC_TRACKS: MusicTrack[] = [
   }
 ];
 
+export const DEFAULT_SITE_IMAGES: SiteImages = {
+  mainVisualUrl: '/picture/main-visual.png',
+  logoUrl: '/picture/logo.svg',
+  footerLogoUrl: '/picture/logo.svg',
+};
+
+function getLocalStorageObject<T>(key: string, defaultData: T): T {
+  const stored = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
+  if (!stored) {
+    localStorage.setItem(LOCAL_STORAGE_PREFIX + key, JSON.stringify(defaultData));
+    return defaultData;
+  }
+  return { ...defaultData, ...JSON.parse(stored) };
+}
+
+function saveLocalStorageObject<T>(key: string, data: T) {
+  localStorage.setItem(LOCAL_STORAGE_PREFIX + key, JSON.stringify(data));
+}
+
 // ----------------------------------------------------
 // PUBLIC THEATER / MUSIC / PROFILE CONTENT
 // ----------------------------------------------------
+export const getSiteImages = async (): Promise<SiteImages> => {
+  if (isMockFirebase) {
+    return getLocalStorageObject<SiteImages>('site_images', DEFAULT_SITE_IMAGES);
+  }
+
+  const path = 'site_settings/images';
+  try {
+    const snapshot = await getDoc(doc(db, 'site_settings', 'images'));
+    if (!snapshot.exists()) return DEFAULT_SITE_IMAGES;
+    const d = snapshot.data();
+    return {
+      mainVisualUrl: typeof d.mainVisualUrl === 'string' && d.mainVisualUrl ? d.mainVisualUrl : DEFAULT_SITE_IMAGES.mainVisualUrl,
+      logoUrl: typeof d.logoUrl === 'string' && d.logoUrl ? d.logoUrl : DEFAULT_SITE_IMAGES.logoUrl,
+      footerLogoUrl: typeof d.footerLogoUrl === 'string' && d.footerLogoUrl ? d.footerLogoUrl : (typeof d.logoUrl === 'string' && d.logoUrl ? d.logoUrl : DEFAULT_SITE_IMAGES.footerLogoUrl),
+    };
+  } catch (error) {
+    console.warn('Could not query Firestore site images, utilizing fallback storage', error);
+    return getLocalStorageObject<SiteImages>('site_images', DEFAULT_SITE_IMAGES);
+  }
+};
+
+export const saveSiteImages = async (images: SiteImages): Promise<void> => {
+  const normalized: SiteImages = {
+    mainVisualUrl: images.mainVisualUrl || DEFAULT_SITE_IMAGES.mainVisualUrl,
+    logoUrl: images.logoUrl || DEFAULT_SITE_IMAGES.logoUrl,
+    footerLogoUrl: images.footerLogoUrl || images.logoUrl || DEFAULT_SITE_IMAGES.footerLogoUrl,
+  };
+  saveLocalStorageObject('site_images', normalized);
+
+  if (isMockFirebase) return;
+  const path = 'site_settings/images';
+  try {
+    await setDoc(doc(db, 'site_settings', 'images'), {
+      ...normalized,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+export const uploadManagedImage = async (file: File, folder: 'site' | 'profiles'): Promise<string> => {
+  if (!['image/png', 'image/jpeg'].includes(file.type)) {
+    throw new Error('PNGまたはJPEG画像のみアップロードできます。');
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('画像サイズは5MB以下にしてください。');
+  }
+
+  if (isMockFirebase) {
+    return readFileAsDataUrl(file);
+  }
+
+  const extension = file.type === 'image/png' ? 'png' : 'jpg';
+  const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_').slice(-80);
+  const path = `managed_images/${folder}/${Date.now()}-${safeName || `image.${extension}`}`;
+  try {
+    const fileRef = storageRef(storage, path);
+    await uploadBytes(fileRef, file, {
+      contentType: file.type,
+      customMetadata: {
+        originalName: file.name,
+      },
+    });
+    return getDownloadURL(fileRef);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+};
+
 export const getDanceVideos = async (adminView = false): Promise<DanceVideo[]> => {
   if (isMockFirebase) {
     const list = getLocalStorageData<DanceVideo>('dance_videos', DANCE_VIDEOS);
@@ -315,6 +421,7 @@ export const getMemberProfiles = async (adminView = false): Promise<MemberProfil
         id,
         name: d.name || '',
         jpName: d.jpName || '',
+        imageUrl: d.imageUrl || '',
         color: d.color || (id === 'smile' ? '#FF9E00' : '#FF6B8B'),
         subColor: d.subColor || (id === 'smile' ? '#FFD000' : '#FFA5A5'),
         signature: d.signature || '',
@@ -349,6 +456,7 @@ export const saveMemberProfile = async (profile: MemberProfile): Promise<void> =
     await setDoc(doc(db, 'member_profiles', profile.id), {
       name: profile.name,
       jpName: profile.jpName,
+      imageUrl: profile.imageUrl || '',
       color: profile.color,
       subColor: profile.subColor,
       signature: profile.signature,

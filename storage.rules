@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+
+    match /managed_images/{folder}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() &&
+        (folder == 'site' || folder == 'profiles') &&
+        request.resource != null &&
+        request.resource.size <= 5 * 1024 * 1024 &&
+        (request.resource.contentType == 'image/png' ||
+         request.resource.contentType == 'image/jpeg');
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

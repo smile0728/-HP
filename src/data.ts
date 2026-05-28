@@ -5,6 +5,7 @@ export const MEMBERS: MemberProfile[] = [
     id: 'smile',
     name: 'Smile',
     jpName: 'すまいる',
+    imageUrl: '',
     color: '#FF9E00', // Bright Orange
     subColor: '#FFD000', // Lively Yellow
     signature: '🌻すまいるハッピー！🌻',
@@ -20,6 +21,7 @@ export const MEMBERS: MemberProfile[] = [
     id: 'caramel',
     name: 'Caramel',
     jpName: 'きゃらめる',
+    imageUrl: '',
     color: '#FF6B8B', // Pastel Pink
     subColor: '#FFA5A5', // Light Cream Pink
     signature: '🧸甘〜い時間をいっしょに。🧸',

@@ -26,6 +26,10 @@ import {
   deleteMusicTrack,
   getMemberProfiles,
   saveMemberProfile,
+  getSiteImages,
+  saveSiteImages,
+  DEFAULT_SITE_IMAGES,
+  uploadManagedImage,
   getDailyStats,
   PhotoEntry,
   DiaryRecord,
@@ -34,7 +38,7 @@ import {
   SeasonLetter,
   DailyStat
 } from '../lib/firebase';
-import { DanceVideo, MemberProfile, MusicTrack } from '../types';
+import { DanceVideo, MemberProfile, MusicTrack, SiteImages } from '../types';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { toYouTubeThumbnailUrl } from '../lib/youtube';
@@ -75,7 +79,7 @@ export default function AdminPanel() {
   const [loginError, setLoginError] = useState('');
 
   // Tab navigation
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'announcements' | 'diary' | 'photos' | 'gacha' | 'letters' | 'videos' | 'music' | 'profiles'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'assets' | 'announcements' | 'diary' | 'photos' | 'gacha' | 'letters' | 'videos' | 'music' | 'profiles'>('dashboard');
 
   // Generic loading states
   const [loading, setLoading] = useState(false);
@@ -89,6 +93,8 @@ export default function AdminPanel() {
   const [danceVideos, setDanceVideos] = useState<DanceVideo[]>([]);
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
   const [profiles, setProfiles] = useState<MemberProfile[]>([]);
+  const [siteImages, setSiteImages] = useState<SiteImages>(DEFAULT_SITE_IMAGES);
+  const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
   const [stats, setStats] = useState<DailyStat[]>([]);
 
   // Editing modals/forms state
@@ -134,7 +140,7 @@ export default function AdminPanel() {
   const refreshData = async () => {
     setLoading(true);
     try {
-      const [p, d, a, f, l, v, m, pr, s] = await Promise.all([
+      const [p, d, a, f, l, v, m, pr, si, s] = await Promise.all([
         getPhotos(true),
         getDiaries(true),
         getAnnouncements(true),
@@ -143,6 +149,7 @@ export default function AdminPanel() {
         getDanceVideos(true),
         getMusicTracks(true),
         getMemberProfiles(true),
+        getSiteImages(),
         getDailyStats()
       ]);
       setPhotos(p);
@@ -153,6 +160,7 @@ export default function AdminPanel() {
       setDanceVideos(v);
       setMusicTracks(m);
       setProfiles(pr);
+      setSiteImages(si);
       setStats(s);
     } catch (err) {
       console.error("Could not fetch admin datasets:", err);
@@ -608,6 +616,7 @@ export default function AdminPanel() {
       id: editingProfile.id as 'smile' | 'caramel',
       name: editingProfile.name,
       jpName: editingProfile.jpName,
+      imageUrl: editingProfile.imageUrl || '',
       color: editingProfile.color || '#FF9E00',
       subColor: editingProfile.subColor || '#FFD000',
       signature: editingProfile.signature || '',
@@ -621,6 +630,31 @@ export default function AdminPanel() {
     });
     setEditingProfile(null);
     refreshData();
+  };
+
+  const handleSaveSiteImages = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveSiteImages(siteImages);
+    refreshData();
+    alert('サイト画像設定を保存しました。');
+  };
+
+  const handleUploadImageFile = async (
+    file: File | undefined,
+    folder: 'site' | 'profiles',
+    imageKey: string,
+    onUploaded: (url: string) => void
+  ) => {
+    if (!file) return;
+    setUploadingImageKey(imageKey);
+    try {
+      const url = await uploadManagedImage(file, folder);
+      onUploaded(url);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '画像アップロードに失敗しました。');
+    } finally {
+      setUploadingImageKey(null);
+    }
   };
 
   // -----------------------------------------------------------------
@@ -679,6 +713,17 @@ export default function AdminPanel() {
                 }`}
               >
                 <LayoutDashboard size={14} /> 運営ダッシュボード
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('assets'); }}
+                className={`w-full min-h-[44px] text-left px-3 py-2 rounded-xl border-2 transition-all font-black text-[11px] sm:text-xs leading-tight flex items-center gap-2 cursor-pointer ${
+                  activeTab === 'assets'
+                    ? 'bg-brand-orange text-white border-dark-charcoal shadow-[2.5px_2.5px_0_#4A2C2A]'
+                    : 'bg-white text-dark-charcoal border-transparent hover:bg-orange-50/40'
+                }`}
+              >
+                <Sparkles size={14} /> サイト画像設定
               </button>
 
               <button
@@ -789,6 +834,90 @@ export default function AdminPanel() {
           {/* -----------------------------------------------------------------
               DASHBOARD PANEL RENDERING
              ----------------------------------------------------------------- */}
+          {activeTab === 'assets' && (
+            <div className="space-y-5">
+              <div className="flex justify-between items-center pb-2.5 border-b border-dashed border-dark-charcoal/20">
+                <h3 className="text-lg font-black flex items-center gap-1.5">🖼️ サイト画像設定</h3>
+              </div>
+
+              <form onSubmit={handleSaveSiteImages} className="bg-white border-3 border-dark-charcoal p-5 rounded-3xl shadow-[4px_4px_0_#4A2C2A] space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black text-dark-charcoal/60 mb-1">トップ画像URL</label>
+                  <input
+                    className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono"
+                    placeholder="/picture/main-visual.png または https://..."
+                    value={siteImages.mainVisualUrl}
+                    onChange={e => setSiteImages({ ...siteImages, mainVisualUrl: e.target.value })}
+                  />
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    onChange={e => handleUploadImageFile(e.target.files?.[0], 'site', 'site-main', url => setSiteImages({ ...siteImages, mainVisualUrl: url }))}
+                    className="mt-2 block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
+                  />
+                  {uploadingImageKey === 'site-main' && <p className="text-[10px] font-black text-brand-orange mt-1">アップロード中...</p>}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-dark-charcoal/60 mb-1">ヘッダー/メインロゴURL</label>
+                  <input
+                    className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono"
+                    placeholder="/picture/logo.svg または https://..."
+                    value={siteImages.logoUrl}
+                    onChange={e => setSiteImages({ ...siteImages, logoUrl: e.target.value })}
+                  />
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    onChange={e => handleUploadImageFile(e.target.files?.[0], 'site', 'site-logo', url => setSiteImages({ ...siteImages, logoUrl: url }))}
+                    className="mt-2 block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
+                  />
+                  {uploadingImageKey === 'site-logo' && <p className="text-[10px] font-black text-brand-orange mt-1">アップロード中...</p>}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-dark-charcoal/60 mb-1">フッターロゴURL</label>
+                  <input
+                    className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono"
+                    placeholder="空欄の場合はメインロゴと同じ"
+                    value={siteImages.footerLogoUrl}
+                    onChange={e => setSiteImages({ ...siteImages, footerLogoUrl: e.target.value })}
+                  />
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    onChange={e => handleUploadImageFile(e.target.files?.[0], 'site', 'site-footer-logo', url => setSiteImages({ ...siteImages, footerLogoUrl: url }))}
+                    className="mt-2 block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
+                  />
+                  {uploadingImageKey === 'site-footer-logo' && <p className="text-[10px] font-black text-brand-orange mt-1">アップロード中...</p>}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                  {[
+                    { label: 'トップ画像', src: siteImages.mainVisualUrl },
+                    { label: 'メインロゴ', src: siteImages.logoUrl },
+                    { label: 'フッターロゴ', src: siteImages.footerLogoUrl || siteImages.logoUrl },
+                  ].map((item) => (
+                    <div key={item.label} className="bg-stone-50 border-2 border-dashed border-dark-charcoal/20 rounded-2xl p-3">
+                      <p className="text-[10px] font-black mb-2">{item.label}</p>
+                      <div className="aspect-video bg-white rounded-xl border border-stone-200 overflow-hidden flex items-center justify-center">
+                        {item.src ? (
+                          <img src={item.src} alt={`${item.label}プレビュー`} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                        ) : (
+                          <span className="text-[10px] text-stone-400 font-bold">未設定</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2.5 border-t border-stone-100">
+                  <button type="submit" className="px-5 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] cursor-pointer">
+                    サイト画像を保存
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
               <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-3 border-dark-charcoal p-5 rounded-3xl shadow-[3px_3px_0px_#4A2C2A] flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1415,6 +1544,19 @@ export default function AdminPanel() {
                     <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="日本語名" value={editingProfile.jpName || ''} onChange={e => setEditingProfile({ ...editingProfile, jpName: e.target.value })} />
                   </div>
                   <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="キャッチコピー" value={editingProfile.tagline || ''} onChange={e => setEditingProfile({ ...editingProfile, tagline: e.target.value })} />
+                  <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono" placeholder="自己紹介画像URL（空欄ならイラスト表示）" value={editingProfile.imageUrl || ''} onChange={e => setEditingProfile({ ...editingProfile, imageUrl: e.target.value })} />
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    onChange={e => handleUploadImageFile(e.target.files?.[0], 'profiles', `profile-${editingProfile.id || 'member'}`, url => setEditingProfile({ ...editingProfile, imageUrl: url }))}
+                    className="block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
+                  />
+                  {uploadingImageKey === `profile-${editingProfile.id || 'member'}` && <p className="text-[10px] font-black text-brand-orange">アップロード中...</p>}
+                  {editingProfile.imageUrl && (
+                    <div className="w-40 h-40 bg-stone-50 border-2 border-dashed border-dark-charcoal/20 rounded-2xl overflow-hidden flex items-center justify-center">
+                      <img src={editingProfile.imageUrl} alt="自己紹介画像プレビュー" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
                   <input className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="サイン文" value={editingProfile.signature || ''} onChange={e => setEditingProfile({ ...editingProfile, signature: e.target.value })} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input className="px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold" placeholder="誕生日" value={editingProfile.birthday || ''} onChange={e => setEditingProfile({ ...editingProfile, birthday: e.target.value })} />
@@ -1435,6 +1577,9 @@ export default function AdminPanel() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profiles.map((profile) => (
                   <div key={profile.id} className="bg-white border-2 border-dark-charcoal rounded-2xl p-4 shadow-[2px_2px_0_#4A2C2A]">
+                    {profile.imageUrl && (
+                      <img src={profile.imageUrl} alt={`${profile.jpName}の画像`} className="w-full h-32 object-cover rounded-xl border border-stone-200 mb-3" referrerPolicy="no-referrer" />
+                    )}
                     <h4 className="text-sm font-black">{profile.jpName} <span className="text-[10px] text-stone-400">({profile.name})</span></h4>
                     <p className="text-[11px] text-dark-charcoal/70 mt-1 line-clamp-2">{profile.tagline}</p>
                     <button onClick={() => setEditingProfile({ ...profile, likesText: profile.likes.join('\n'), dislikesText: profile.dislikes.join('\n') })} className="mt-3 px-3 py-1.5 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>

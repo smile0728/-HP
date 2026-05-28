@@ -83,6 +83,11 @@ export default function App() {
     'video-3': DANCE_VIDEOS[2].heartsCount,
   });
   const [hasLikedVideo, setHasLikedVideo] = useState<{ [key: string]: boolean }>({});
+  const [siteImages, setSiteImages] = useState({
+    mainVisualUrl: MainVisualImg,
+    logoUrl: LogoImg,
+    footerLogoUrl: LogoImg,
+  });
   const activeVideoEmbedUrl = toYouTubeEmbedUrl(activeVideo.youtubeUrl);
 
   useEffect(() => {
@@ -98,6 +103,14 @@ export default function App() {
             return acc;
           }, {})
         );
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    import('./lib/firebase')
+      .then(async ({ getSiteImages }) => {
+        setSiteImages(await getSiteImages());
       })
       .catch(() => {});
   }, []);
@@ -357,7 +370,7 @@ export default function App() {
 
                 <div className="h-full overflow-hidden rounded-2xl border-2 border-dark-charcoal">
                   <img 
-                    src={MainVisualImg} 
+                    src={siteImages.mainVisualUrl} 
                     alt="あろはーず 2人のビジュアル" 
                     referrerPolicy="no-referrer"
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -380,7 +393,7 @@ export default function App() {
                 </div>
 
                 <img 
-                  src={LogoImg} 
+                  src={siteImages.logoUrl} 
                   alt="あろはーずの公式ロゴ" 
                   referrerPolicy="no-referrer"
                   className="w-full pointer-events-none"
@@ -603,7 +616,7 @@ export default function App() {
               className="max-w-[120px] select-none cursor-pointer hover:scale-105 active:scale-95 transition-transform"
             >
               <img 
-                src={LogoImg} 
+                src={siteImages.footerLogoUrl || siteImages.logoUrl} 
                 alt="Aloha-z design logo" 
                 referrerPolicy="no-referrer"
                 className="w-full"

@@ -2,6 +2,7 @@ export interface MemberProfile {
   id: 'smile' | 'caramel';
   name: string;
   jpName: string;
+  imageUrl?: string;
   color: string;
   subColor: string;
   signature: string;
@@ -40,6 +41,12 @@ export interface MusicTrack {
   likes: number;
   visible?: boolean;
   sortOrder?: number;
+}
+
+export interface SiteImages {
+  mainVisualUrl: string;
+  logoUrl: string;
+  footerLogoUrl: string;
 }
 
 export interface DiaryEntry {

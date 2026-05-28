@@ -148,9 +148,10 @@ service cloud.firestore {
 
     function isValidMemberProfile(data) {
       return data.keys().hasAll(['name', 'jpName', 'color', 'subColor', 'signature', 'tagline', 'birthday', 'bloodType', 'likes', 'dislikes', 'message', 'stickerStyle']) &&
-             data.keys().size() <= 13 &&
+             data.keys().size() <= 14 &&
              data.name is string && data.name.size() <= 64 &&
              data.jpName is string && data.jpName.size() <= 64 &&
+             (!data.keys().hasAny(['imageUrl']) || (data.imageUrl is string && data.imageUrl.size() <= 100000)) &&
              data.color is string && data.color.size() <= 32 &&
              data.subColor is string && data.subColor.size() <= 32 &&
              data.signature is string && data.signature.size() <= 256 &&
@@ -161,6 +162,15 @@ service cloud.firestore {
              data.dislikes is list && data.dislikes.size() <= 32 &&
              data.message is string && data.message.size() <= 2000 &&
              data.stickerStyle is string && data.stickerStyle.size() <= 256 &&
+             (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidSiteImages(data) {
+      return data.keys().hasAll(['mainVisualUrl', 'logoUrl', 'footerLogoUrl']) &&
+             data.keys().size() <= 4 &&
+             data.mainVisualUrl is string && data.mainVisualUrl.size() <= 100000 &&
+             data.logoUrl is string && data.logoUrl.size() <= 100000 &&
+             data.footerLogoUrl is string && data.footerLogoUrl.size() <= 100000 &&
              (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
     }
 
@@ -217,6 +227,14 @@ service cloud.firestore {
       allow create, update: if isAdmin() &&
         (profileId == 'smile' || profileId == 'caramel') &&
         isValidMemberProfile(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /site_settings/{settingsId} {
+      allow read: if settingsId == 'images';
+      allow create, update: if isAdmin() &&
+        settingsId == 'images' &&
+        isValidSiteImages(request.resource.data);
       allow delete: if false;
     }
 

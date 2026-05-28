@@ -72,14 +72,24 @@ export default function ProfileCards() {
                 ? 'bg-gradient-to-br from-brand-orange to-brand-yellow'
                 : 'bg-gradient-to-br from-brand-pink to-amber-100'
             }`}>
-              {/* Retro background sparkle pattern inside */}
-              <div className="absolute inset-0 opacity-20 dotted-bg" />
-              <div className="text-center z-10">
-                <span className="text-4xl block mb-1">
-                  {selectedMember.id === 'smile' ? '🌻' : '🧸'}
-                </span>
-                <span className="text-xs tracking-widest font-mono">DANCE CUTIE</span>
-              </div>
+              {selectedMember.imageUrl ? (
+                <img
+                  src={selectedMember.imageUrl}
+                  alt={`${selectedMember.jpName}の自己紹介画像`}
+                  referrerPolicy="no-referrer"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  <div className="absolute inset-0 opacity-20 dotted-bg" />
+                  <div className="text-center z-10">
+                    <span className="text-4xl block mb-1">
+                      {selectedMember.id === 'smile' ? '🌻' : '🧸'}
+                    </span>
+                    <span className="text-xs tracking-widest font-mono">DANCE CUTIE</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Hand-written signature section */}
