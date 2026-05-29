@@ -30,6 +30,7 @@ import {
   saveSiteImages,
   DEFAULT_SITE_IMAGES,
   uploadManagedImage,
+  ManagedImageFolder,
   getDailyStats,
   PhotoEntry,
   DiaryRecord,
@@ -612,30 +613,46 @@ export default function AdminPanel() {
     refreshData();
   };
 
+  const handleEditProfile = (profile: MemberProfile) => {
+    const likes = Array.isArray(profile.likes) ? profile.likes : [];
+    const dislikes = Array.isArray(profile.dislikes) ? profile.dislikes : [];
+    setEditingProfile({
+      ...profile,
+      likesText: likes.filter((item) => typeof item === 'string').join('\n'),
+      dislikesText: dislikes.filter((item) => typeof item === 'string').join('\n')
+    });
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProfile?.id || !editingProfile?.name || !editingProfile?.jpName) {
       alert("メンバーID、英字名、日本語名は必須です。");
       return;
     }
-    await saveMemberProfile({
-      id: editingProfile.id as 'smile' | 'caramel',
-      name: editingProfile.name,
-      jpName: editingProfile.jpName,
-      imageUrl: editingProfile.imageUrl || '',
-      color: editingProfile.color || '#FF9E00',
-      subColor: editingProfile.subColor || '#FFD000',
-      signature: editingProfile.signature || '',
-      tagline: editingProfile.tagline || '',
-      birthday: editingProfile.birthday || '',
-      bloodType: editingProfile.bloodType || '',
-      likes: (editingProfile.likesText || '').split('\n').map((item) => item.trim()).filter(Boolean),
-      dislikes: (editingProfile.dislikesText || '').split('\n').map((item) => item.trim()).filter(Boolean),
-      message: editingProfile.message || '',
-      stickerStyle: editingProfile.stickerStyle || ''
-    });
-    setEditingProfile(null);
-    refreshData();
+    try {
+      await saveMemberProfile({
+        id: editingProfile.id as 'smile' | 'caramel',
+        name: editingProfile.name,
+        jpName: editingProfile.jpName,
+        imageUrl: editingProfile.imageUrl || '',
+        color: editingProfile.color || '#FF9E00',
+        subColor: editingProfile.subColor || '#FFD000',
+        signature: editingProfile.signature || '',
+        tagline: editingProfile.tagline || '',
+        birthday: editingProfile.birthday || '',
+        bloodType: editingProfile.bloodType || '',
+        likes: (editingProfile.likesText || '').split('\n').map((item) => item.trim()).filter(Boolean),
+        dislikes: (editingProfile.dislikesText || '').split('\n').map((item) => item.trim()).filter(Boolean),
+        message: editingProfile.message || '',
+        stickerStyle: editingProfile.stickerStyle || ''
+      });
+      setEditingProfile(null);
+      await refreshData();
+      alert('自己紹介を保存しました。');
+    } catch (error) {
+      console.error('Could not save member profile:', error);
+      alert('自己紹介の保存に失敗しました。Firestoreルールや管理者権限を確認してください。');
+    }
   };
 
   const handleSaveSiteImages = async (e: React.FormEvent) => {
@@ -647,7 +664,7 @@ export default function AdminPanel() {
 
   const handleUploadImageFile = async (
     file: File | undefined,
-    folder: 'site' | 'profiles' | 'fortunes',
+    folder: ManagedImageFolder,
     imageKey: string,
     onUploaded: (url: string) => void
   ) => {
@@ -1347,6 +1364,18 @@ export default function AdminPanel() {
                       className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-mono text-stone-600"
                       placeholder="https://images.unsplash.com/... 等の画像URL"
                     />
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      onChange={e => handleUploadImageFile(e.target.files?.[0], 'photos', `photo-${editingPhoto.id || 'new'}`, url => setEditingPhoto((current) => current ? { ...current, imageUrl: url } : current))}
+                      className="mt-2 block w-full text-[11px] font-bold file:mr-3 file:px-3 file:py-1.5 file:rounded-xl file:border-2 file:border-dark-charcoal file:bg-brand-orange file:text-white file:font-black file:cursor-pointer"
+                    />
+                    {uploadingImageKey === `photo-${editingPhoto.id || 'new'}` && <p className="text-[10px] font-black text-brand-orange mt-1">アップロード中...</p>}
+                    {editingPhoto.imageUrl && (
+                      <div className="mt-3 w-full max-w-xs aspect-square rounded-xl border border-stone-200 bg-stone-50 overflow-hidden flex items-center justify-center">
+                        <img src={editingPhoto.imageUrl} alt="写真プレビュー" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -1369,6 +1398,7 @@ export default function AdminPanel() {
                     </button>
                     <button
                       type="submit"
+                      disabled={uploadingImageKey === `photo-${editingPhoto.id || 'new'}`}
                       className="px-5 py-2 bg-brand-orange text-white text-xs font-black rounded-xl border-2 border-dark-charcoal shadow-[2px_2px_0_#4A2C2A] cursor-pointer"
                     >
                       フォト登録保存
@@ -1625,7 +1655,7 @@ export default function AdminPanel() {
                     )}
                     <h4 className="text-sm font-black">{profile.jpName} <span className="text-[10px] text-stone-400">({profile.name})</span></h4>
                     <p className="text-[11px] text-dark-charcoal/70 mt-1 line-clamp-2">{profile.tagline}</p>
-                    <button onClick={() => setEditingProfile({ ...profile, likesText: profile.likes.join('\n'), dislikesText: profile.dislikes.join('\n') })} className="mt-3 px-3 py-1.5 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
+                    <button onClick={() => handleEditProfile(profile)} className="mt-3 px-3 py-1.5 bg-yellow-50 text-[#D97706] text-[10px] font-black rounded-lg border border-amber-100 cursor-pointer">編集</button>
                   </div>
                 ))}
               </div>

@@ -38,13 +38,17 @@ service cloud.firestore {
     }
 
     function isValidDiary(data) {
-      return data.keys().hasAll(['id', 'author', 'content', 'date', 'visible']) &&
-             data.keys().size() <= 7 &&
+      return data.keys().hasAll(['id', 'author', 'title', 'content', 'date', 'visible']) &&
+             data.keys().size() <= 9 &&
              data.id is string && data.id.size() <= 128 &&
              data.author is string && (data.author == 'smile' || data.author == 'caramel') &&
+             data.title is string && data.title.size() <= 256 &&
              data.content is string && data.content.size() <= 10000 &&
              data.date is string && data.date.size() <= 32 &&
-             data.visible is bool;
+             data.visible is bool &&
+             (!data.keys().hasAny(['response']) || (data.response is string && data.response.size() <= 10000)) &&
+             (!data.keys().hasAny(['stickers']) || (data.stickers is list && data.stickers.size() <= 32)) &&
+             (!data.keys().hasAny(['createdAt']) || (data.createdAt is string && data.createdAt.size() <= 64));
     }
 
     function isValidAnnouncement(data) {
@@ -81,17 +85,19 @@ service cloud.firestore {
     }
 
     function isValidLetter(data) {
-      return data.keys().hasAll(['id', 'season', 'title', 'content', 'author', 'visible']) &&
+      return data.keys().hasAll(['id', 'season', 'title', 'content', 'smileContent', 'caramelContent', 'visible']) &&
              data.keys().size() <= 10 &&
              data.id is string && data.id.size() <= 128 &&
              data.season is string && data.season.size() <= 64 &&
              data.title is string && data.title.size() <= 128 &&
              data.content is string && data.content.size() <= 10000 &&
-             data.author is string && (data.author == 'smile' || data.author == 'caramel' || data.author == 'alohaz') &&
+             data.smileContent is string && data.smileContent.size() <= 10000 &&
+             data.caramelContent is string && data.caramelContent.size() <= 10000 &&
              data.visible is bool &&
              (!data.keys().hasAny(['imageUrl']) || (data.imageUrl is string && data.imageUrl.size() <= 100000)) &&
              (!data.keys().hasAny(['startDate']) || (data.startDate is string && data.startDate.size() <= 32)) &&
-             (!data.keys().hasAny(['endDate']) || (data.endDate is string && data.endDate.size() <= 32));
+             (!data.keys().hasAny(['endDate']) || (data.endDate is string && data.endDate.size() <= 32)) &&
+             (!data.keys().hasAny(['createdAt']) || (data.createdAt is string && data.createdAt.size() <= 64));
     }
 
     function isValidDailyStat(data) {

@@ -23,12 +23,6 @@ import {
   increment,
   writeBatch
 } from 'firebase/firestore';
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DANCE_VIDEOS, MEMBERS } from '../data';
 import { DanceVideo, MemberProfile, MusicTrack, SiteImages } from '../types';
@@ -42,8 +36,11 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
+
+const SUPABASE_URL = 'https://vgtunmyfqphsxwdinzim.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZndHVubXlmcXBoc3h3ZGluemltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMTAzNjYsImV4cCI6MjA5NTU4NjM2Nn0.QBLtoatzPlGTw1QU5uWPOV7ALzq6fUak63XlqpuVIbc';
+const SUPABASE_IMAGE_BUCKET = 'images';
 
 // Error handler specified by the Firebase skill requirements
 export enum OperationType {
@@ -206,7 +203,58 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export const uploadManagedImage = async (file: File, folder: 'site' | 'profiles' | 'fortunes'): Promise<string> => {
+export type ManagedImageFolder = 'site' | 'profiles' | 'fortunes' | 'photos';
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => window.clearTimeout(timeoutId));
+  });
+}
+
+function toStorageUploadError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (message.includes('row-level security') || message.includes('new row violates row-level security policy')) {
+    return new Error('画像アップロードに失敗しました。Supabase Storageのimagesバケットにアップロード許可ポリシーを設定してください。');
+  }
+
+  if (message.includes('CORS') || message.includes('ERR_FAILED') || message.includes('Failed to fetch')) {
+    return new Error('画像アップロードに失敗しました。Supabaseの接続情報とStorage設定を確認してください。');
+  }
+
+  if (message.includes('timeout') || message.includes('タイムアウト')) {
+    return new Error(message);
+  }
+
+  return error instanceof Error ? error : new Error(message);
+}
+
+async function uploadSupabaseImage(file: File, path: string): Promise<string> {
+  const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_IMAGE_BUCKET}/${path}`;
+  const response = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': file.type,
+      'Cache-Control': '3600',
+    },
+    body: file,
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(body || `Supabase upload failed: ${response.status}`);
+  }
+
+  return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_IMAGE_BUCKET}/${path}`;
+}
+
+export const uploadManagedImage = async (file: File, folder: ManagedImageFolder): Promise<string> => {
   if (!['image/png', 'image/jpeg'].includes(file.type)) {
     throw new Error('PNGまたはJPEG画像のみアップロードできます。');
   }
@@ -223,16 +271,14 @@ export const uploadManagedImage = async (file: File, folder: 'site' | 'profiles'
   const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_').slice(-80);
   const path = `managed_images/${folder}/${Date.now()}-${safeName || `image.${extension}`}`;
   try {
-    const fileRef = storageRef(storage, path);
-    await uploadBytes(fileRef, file, {
-      contentType: file.type,
-      customMetadata: {
-        originalName: file.name,
-      },
-    });
-    return getDownloadURL(fileRef);
+    return await withTimeout(
+      uploadSupabaseImage(file, path),
+      30000,
+      '画像アップロードがタイムアウトしました。Supabase Storageの設定と通信状態を確認してください。'
+    );
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, path);
+    console.error('Storage upload error:', { path, error });
+    throw toStorageUploadError(error);
   }
 };
 
@@ -444,29 +490,35 @@ export const getMemberProfiles = async (adminView = false): Promise<MemberProfil
 };
 
 export const saveMemberProfile = async (profile: MemberProfile): Promise<void> => {
+  const normalizedProfile: MemberProfile = {
+    ...profile,
+    imageUrl: profile.imageUrl || '',
+    likes: Array.isArray(profile.likes) ? profile.likes.filter((item) => typeof item === 'string') : [],
+    dislikes: Array.isArray(profile.dislikes) ? profile.dislikes.filter((item) => typeof item === 'string') : [],
+  };
   const list = getLocalStorageData<MemberProfile>('member_profiles', MEMBERS);
-  const foundIdx = list.findIndex((item) => item.id === profile.id);
-  if (foundIdx !== -1) list[foundIdx] = profile;
-  else list.push(profile);
+  const foundIdx = list.findIndex((item) => item.id === normalizedProfile.id);
+  if (foundIdx !== -1) list[foundIdx] = normalizedProfile;
+  else list.push(normalizedProfile);
   saveLocalStorageData('member_profiles', list);
 
   if (isMockFirebase) return;
-  const path = `member_profiles/${profile.id}`;
+  const path = `member_profiles/${normalizedProfile.id}`;
   try {
-    await setDoc(doc(db, 'member_profiles', profile.id), {
-      name: profile.name,
-      jpName: profile.jpName,
-      imageUrl: profile.imageUrl || '',
-      color: profile.color,
-      subColor: profile.subColor,
-      signature: profile.signature,
-      tagline: profile.tagline,
-      birthday: profile.birthday,
-      bloodType: profile.bloodType,
-      likes: profile.likes,
-      dislikes: profile.dislikes,
-      message: profile.message,
-      stickerStyle: profile.stickerStyle,
+    await setDoc(doc(db, 'member_profiles', normalizedProfile.id), {
+      name: normalizedProfile.name,
+      jpName: normalizedProfile.jpName,
+      imageUrl: normalizedProfile.imageUrl || '',
+      color: normalizedProfile.color,
+      subColor: normalizedProfile.subColor,
+      signature: normalizedProfile.signature,
+      tagline: normalizedProfile.tagline,
+      birthday: normalizedProfile.birthday,
+      bloodType: normalizedProfile.bloodType,
+      likes: normalizedProfile.likes,
+      dislikes: normalizedProfile.dislikes,
+      message: normalizedProfile.message,
+      stickerStyle: normalizedProfile.stickerStyle,
       updatedAt: new Date().toISOString()
     });
   } catch (error) {
@@ -685,6 +737,7 @@ export const savePhoto = async (photo: PhotoEntry): Promise<void> => {
   const path = `photos/${photo.id}`;
   try {
     await setDoc(doc(db, 'photos', photo.id), {
+      id: photo.id,
       imageUrl: photo.imageUrl,
       title: photo.title,
       date: photo.date,
@@ -794,6 +847,7 @@ export const saveDiary = async (diary: DiaryRecord): Promise<void> => {
   const path = `diaries/${diary.id}`;
   try {
     await setDoc(doc(db, 'diaries', diary.id), {
+      id: diary.id,
       date: diary.date,
       author: diary.author,
       title: diary.title,
@@ -881,6 +935,7 @@ export const saveAnnouncement = async (ann: AnnouncementEntry): Promise<void> =>
   const path = `announcements/${ann.id}`;
   try {
     await setDoc(doc(db, 'announcements', ann.id), {
+      id: ann.id,
       date: ann.date,
       title: ann.title,
       content: ann.content,
@@ -1199,6 +1254,7 @@ export const saveLetter = async (letter: SeasonLetter): Promise<void> => {
   const path = `letters/${letter.id}`;
   try {
     await setDoc(doc(db, 'letters', letter.id), {
+      id: letter.id,
       season: letter.season,
       title: letter.title,
       content: letter.content,
