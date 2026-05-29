@@ -9,7 +9,7 @@ export const MEMBERS: MemberProfile[] = [
     color: '#FF9E00', // Bright Orange
     subColor: '#FFD000', // Lively Yellow
     signature: '🌻すまいるハッピー！🌻',
-    tagline: 'いつもいつでも満開スマイル！あろはーずの元気印＆ハイテンション担当。',
+    tagline: 'いつもいつでも満開すまいる！あろはーずの元気印＆ハイテンション担当。',
     birthday: '8月21日（ひまわりの日！）',
     bloodType: 'O型（めちゃマイペース）',
     likes: ['グミ（ハード系）', 'ひまわり畑', 'アクロバティックなダンス', '炭酸ジュース', 'ガチャガチャ'],
@@ -19,8 +19,8 @@ export const MEMBERS: MemberProfile[] = [
   },
   {
     id: 'caramel',
-    name: 'Caramel',
-    jpName: 'きゃらめる',
+    name: 'Kyarumen',
+    jpName: 'きゃるめん',
     imageUrl: '',
     color: '#FF6B8B', // Pastel Pink
     subColor: '#FFA5A5', // Light Cream Pink
@@ -28,9 +28,9 @@ export const MEMBERS: MemberProfile[] = [
     tagline: 'おっとりふわふわ、でもダンスは超キレキレ！あろはーずの癒やし・あざと担当。',
     birthday: '11月12日（おやつの時間🎂）',
     bloodType: 'A型（自称・几帳面）',
-    likes: ['キャラメルラテ', '平成レトロな雑貨収集', 'フリルがいっぱいのお洋服', '寝落ちすること', 'クリームソーダ'],
+    likes: ['きゃるめんラテ', '平成レトロな雑貨収集', 'フリルがいっぱいのお洋服', '寝落ちすること', 'クリームソーダ'],
     dislikes: ['早起き（10回アラーム必要）', '激辛キムチ', '湿気（前髪が命！）'],
-    message: 'ひらひら揺れるリボンがめじるし、きゃらめるです…🎀。あろはーずのゆる〜い秘密基地へようこそ。たくさんマイナスイオン吸い込んで、ゆっくりしていってね。日記も毎日かいてるよ…！💕',
+    message: 'ひらひら揺れるリボンがめじるし、きゃるめんです…🎀。あろはーずのゆる〜い秘密基地へようこそ。たくさんマイナスイオン吸い込んで、ゆっくりしていってね。日記も毎日かいてるよ…！💕',
     stickerStyle: 'bg-rose-100 border-rose-400 rotate-[3deg]'
   }
 ];
@@ -47,7 +47,7 @@ export const DANCE_VIDEOS: DanceVideo[] = [
   },
   {
     id: 'video-2',
-    title: '【お外で！】おねがいダーリン 踊ってみた【すまいる×きゃらめる】',
+    title: '【お外で！】おねがいダーリン 踊ってみた【すまいる×きゃるめん】',
     description: 'おねがいダーリン / ONE',
     youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     thumbnailUrl: 'https://picsum.photos/seed/dance2/480/360',
@@ -71,8 +71,8 @@ export const INITIAL_DIARY: DiaryEntry[] = [
     date: '2026/05/24',
     author: 'smile',
     title: '今日から新コーナー！交換日記はじめるよ！✨',
-    content: 'みんなあろはーず！すまいるだよ！今日からこのHPで『交換日記コーナー』をスタートすることになりましたー！パチパチパチ👏 SNSだと言いきれない2人の日常とか、最近買った変なおもちゃの話とか（笑）、ゆるーく届けていきます！きゃらめる、ちゃんと毎日書いてね〜〜〜！！約束！！',
-    response: 'きゃらめる：約束の指切り、すでに3回くらいしてる気がする…（がんばります！🥺）',
+    content: 'みんなあろはーず！すまいるだよ！今日からこのHPで『交換日記コーナー』をスタートすることになりましたー！パチパチパチ👏 SNSだと言いきれない2人の日常とか、最近買った変なおもちゃの話とか（笑）、ゆるーく届けていきます！きゃるめん、ちゃんと毎日書いてね〜〜〜！！約束！！',
+    response: 'きゃるめん：約束の指切り、すでに3回くらいしてる気がする…（がんばります！🥺）',
     stickers: ['🌞', '🔥', '🍊']
   },
   {
@@ -92,7 +92,7 @@ export const FORTUNES: FortuneResult[] = [
     description: '今日は星がピカピカ！何をやってもあろはーずが全力で応援しているような、スーパーミラクルな１日になるよ！運気が宇宙を越えて大気圏突入！',
     luckLevel: '超大吉',
     commentSmile: '「もう最強！お菓子食べ放題、ガチャガチャ全種コンプできちゃうかも！？」',
-    commentCaramel: '「きゃらめるも、お布団の中からお祈りしてるね…むにゃむにゃ…」',
+    commentCaramel: '「きゃるめんも、お布団の中からお祈りしてるね…むにゃむにゃ…」',
     luckyItem: 'オレンジ味のハードグミキャンディ',
     luckyDance: '「ファンサ」のサビラストの全力手をふるところ！',
     ratingSmile: 5,
@@ -110,12 +110,12 @@ export const FORTUNES: FortuneResult[] = [
     ratingCaramel: 3
   },
   {
-    title: '甘口あざと！きゃらめる激吉🧸',
-    description: 'きゃらめるのあざとパワーが炸裂。いつもは恥ずかしいセリフも、今日なら言えちゃうかも？周囲の人がみんなあなたに甘々になります。',
+    title: '甘口あざと！きゃるめん激吉🧸',
+    description: 'きゃるめんのあざとパワーが炸裂。いつもは恥ずかしいセリフも、今日なら言えちゃうかも？周囲の人がみんなあなたに甘々になります。',
     luckLevel: '激吉',
-    commentSmile: '「きゃらめるが激吉なんてズルい！あざとビーム分けて〜〜！」',
+    commentSmile: '「きゃるめんが激吉なんてズルい！あざとビーム分けて〜〜！」',
     commentCaramel: '「ふふ、今日は周りのみんなにワガママを３つまで言っていいよ〜？🎀」',
-    luckyItem: 'キャラメルラテ（ホイップマシマシで！）',
+    luckyItem: 'きゃるめんラテ（ホイップマシマシで！）',
     luckyDance: '「おねがいダーリン」の首かしげポーズ( *´艸｀)',
     ratingSmile: 3,
     ratingCaramel: 5
@@ -159,7 +159,7 @@ export const GALLERY_PHOTOS = [
   { id: 'p1', title: '結成日のワンショット', url: 'https://picsum.photos/seed/photo1/500/500', rotation: -4, date: '2025.04.01' },
   { id: 'p2', title: 'スタジオ練習でボロボロ（笑）', url: 'https://picsum.photos/seed/photo2/500/500', rotation: 3, date: '2025.05.15' },
   { id: 'p3', title: 'ひまわり畑でのロケ撮影！🌻', url: 'https://picsum.photos/seed/photo3/500/500', rotation: -2, date: '2025.08.21' },
-  { id: 'p4', title: 'お気に入りキャラメルパフェ！🍧', url: 'https://picsum.photos/seed/photo4/500/500', rotation: 5, date: '2025.11.12' },
+  { id: 'p4', title: 'お気に入りきゃるめんパフェ！🍧', url: 'https://picsum.photos/seed/photo4/500/500', rotation: 5, date: '2025.11.12' },
   { id: 'p5', title: 'ステージ裏のドタバタ２人組', url: 'https://picsum.photos/seed/photo5/500/500', rotation: -5, date: '2026/02/14' },
   { id: 'p6', title: '帰り道の夕焼けポーズ！✨', url: 'https://picsum.photos/seed/photo6/500/500', rotation: 2, date: '2026/05/18' }
 ];

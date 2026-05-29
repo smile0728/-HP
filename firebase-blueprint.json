@@ -17,7 +17,7 @@
     },
     "Diary": {
       "title": "Diary",
-      "description": "Exchange Diary entries written by Smile or Caramel",
+      "description": "Exchange Diary entries written by Smile or Kyarumen",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -65,7 +65,7 @@
     },
     "Letter": {
       "title": "Letter",
-      "description": "Complete rewards secret letters designed by Smile & Caramel",
+      "description": "Complete rewards secret letters designed by Smile & Kyarumen",
       "type": "object",
       "properties": {
         "id": { "type": "string" },

@@ -6,11 +6,13 @@ interface LoadingScreenProps {
 }
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
-  const [stage, setStage] = useState<'rolling' | 'collided' | 'loaded'>('rolling');
+  const [stage, setStage] = useState<'ready' | 'smile' | 'kyarumen' | 'aloha' | 'loaded'>('ready');
   const [progress, setProgress] = useState(0);
+  const smileImage = '/picture/loading-smile.png';
+  const kyarumenImage = '/picture/loading-kyarumen.png';
+  const alohazImage = '/picture/loading-alohaz.png';
 
   useEffect(() => {
-    // 1. Candy rolling and progress ticking
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
@@ -21,18 +23,27 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       });
     }, 40);
 
-    // 2. Schedule phases
-    const collideTimer = setTimeout(() => {
-      setStage('collided');
-    }, 1500);
+    const smileTimer = setTimeout(() => {
+      setStage('smile');
+    }, 650);
+
+    const kyarumenTimer = setTimeout(() => {
+      setStage('kyarumen');
+    }, 1250);
+
+    const alohaTimer = setTimeout(() => {
+      setStage('aloha');
+    }, 1850);
 
     const loadedTimer = setTimeout(() => {
       setStage('loaded');
-    }, 2100);
+    }, 2800);
 
     return () => {
       clearInterval(progressInterval);
-      clearTimeout(collideTimer);
+      clearTimeout(smileTimer);
+      clearTimeout(kyarumenTimer);
+      clearTimeout(alohaTimer);
       clearTimeout(loadedTimer);
     };
   }, []);
@@ -81,56 +92,94 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
       <div className="relative z-10 max-w-md w-full px-6 flex flex-col items-center">
         <AnimatePresence mode="wait">
-          {stage === 'rolling' && (
+          {stage === 'ready' && (
             <motion.div 
-              key="rolling"
-              className="relative w-full h-40 flex items-center justify-between"
+              key="ready"
+              className="relative h-40 flex items-center justify-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* Left candy: Orange smile candy */}
-              <motion.div
-                initial={{ x: -100, rotate: 0 }}
-                animate={{ x: 120, rotate: 360 }}
-                transition={{ duration: 1.4, ease: 'easeOut' }}
-                className="w-14 h-14 bg-brand-orange border-4 border-dark-charcoal rounded-full flex items-center justify-center shadow-[4px_4px_0px_#4A3E3D] relative bubble-shadow"
-              >
-                <span className="text-xl">🍬</span>
-                <span className="absolute -top-1 -right-1 text-xs bg-brand-yellow px-1 rounded-full border border-dark-charcoal text-[8px] font-bold">SM</span>
-              </motion.div>
-
-              {/* Center candy wrapper or collision target zone */}
-              <div className="w-1 md:w-4" />
-
-              {/* Right candy: Pink caramel candy */}
-              <motion.div
-                initial={{ x: 100, rotate: 0 }}
-                animate={{ x: -120, rotate: -360 }}
-                transition={{ duration: 1.4, ease: 'easeOut' }}
-                className="w-14 h-14 bg-brand-pink border-4 border-dark-charcoal rounded-full flex items-center justify-center shadow-[4px_4px_0px_#4A3E3D] relative bubble-shadow"
-              >
-                <span className="text-xl">🍬</span>
-                <span className="absolute -top-1 -left-1 text-xs bg-pink-100 px-1 rounded-full border border-dark-charcoal text-[8px] font-bold">CR</span>
-              </motion.div>
+              <div className="relative">
+                <span className="absolute -top-8 -left-8 text-3xl animate-bounce">🌻</span>
+                <span className="absolute -bottom-8 -right-8 text-3xl animate-bounce" style={{ animationDelay: '160ms' }}>🧸</span>
+                <span className="text-5xl sm:text-6xl font-sans font-black text-brand-orange drop-shadow-[4px_4px_0_#4A3E3D]">
+                  せーの！
+                </span>
+              </div>
             </motion.div>
           )}
 
-          {stage === 'collided' && (
+          {stage === 'smile' && (
             <motion.div
-              key="collided"
-              initial={{ scale: 0.1, rotate: 0 }}
-              animate={{ scale: [1, 1.4, 1], rotate: [0, 15, -15, 0] }}
+              key="smile"
+              initial={{ opacity: 0, x: -90, rotate: -8 }}
+              animate={{ opacity: 1, x: 0, rotate: 0 }}
               exit={{ opacity: 0 }}
-              className="h-40 flex items-center justify-center"
+              className="h-52 w-full flex items-center justify-center"
             >
-              <div className="relative">
-                {/* Visual Comic burst effect */}
-                <span className="text-6xl animate-ping absolute -top-4 -left-4">💥</span>
-                <span className="text-7xl font-sans font-black text-brand-orange drop-shadow-[4px_4px_0_#4A3E3D] tracking-wider z-20">
-                  ぴこんっ！
-                </span>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-4xl text-brand-pink animate-pulse">✨</span>
+              <div className="relative w-full flex items-end justify-center gap-2">
+                <img
+                  src={smileImage}
+                  alt="すまいる"
+                  className="h-44 sm:h-52 w-auto object-contain drop-shadow-[5px_5px_0_#4A3E3D]"
+                />
+                <div className="bg-white border-4 border-dark-charcoal rounded-3xl px-4 py-3 shadow-[6px_6px_0_#4A3E3D] -rotate-2 mb-4">
+                  <span className="block text-sm font-black text-brand-orange mb-1">🌻 すまいる</span>
+                  <span className="whitespace-nowrap text-2xl sm:text-3xl font-sans font-black text-dark-charcoal">
+                    すまいるです！
+                  </span>
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {stage === 'kyarumen' && (
+            <motion.div
+              key="kyarumen"
+              initial={{ opacity: 0, x: 90, rotate: 8 }}
+              animate={{ opacity: 1, x: 0, rotate: 0 }}
+              exit={{ opacity: 0 }}
+              className="h-52 w-full flex items-center justify-center"
+            >
+              <div className="relative w-full flex flex-row-reverse items-end justify-center gap-2">
+                <img
+                  src={kyarumenImage}
+                  alt="きゃるめん"
+                  className="h-44 sm:h-52 w-auto object-contain drop-shadow-[5px_5px_0_#4A3E3D]"
+                />
+                <div className="bg-white border-4 border-dark-charcoal rounded-3xl px-4 py-3 shadow-[6px_6px_0_#4A3E3D] rotate-2 mb-4">
+                  <span className="block text-sm font-black text-brand-pink mb-1">🧸 きゃるめん</span>
+                  <span className="whitespace-nowrap text-2xl sm:text-3xl font-sans font-black text-dark-charcoal">
+                    きゃるめんです！
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {stage === 'aloha' && (
+            <motion.div
+              key="aloha"
+              initial={{ opacity: 0, scale: 0.75 }}
+              animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+              exit={{ opacity: 0 }}
+              className="h-56 w-full flex items-center justify-center text-center"
+            >
+              <div className="relative w-full flex flex-col items-center">
+                <span className="absolute top-2 left-4 text-3xl animate-pulse">✨</span>
+                <span className="absolute bottom-2 right-4 text-3xl animate-pulse">✨</span>
+                <img
+                  src={alohazImage}
+                  alt="あろはーず"
+                  className="h-36 sm:h-44 w-auto object-contain drop-shadow-[5px_5px_0_#4A3E3D] mb-1"
+                />
+                <span className="block text-base sm:text-lg font-black text-brand-pink">
+                  2人合わせて
+                </span>
+                <span className="block whitespace-nowrap text-[clamp(1.45rem,7vw,3rem)] leading-none font-display font-black text-brand-orange drop-shadow-[5px_5px_0_#4A3E3D]">
+                  あろはーずです！！
+                </span>
               </div>
             </motion.div>
           )}
@@ -176,7 +225,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
         {/* Level / loading bar indicator */}
         <div className="w-full mt-10">
           <div className="flex justify-between text-[11px] font-mono font-semibold text-dark-charcoal/80 mb-1">
-            <span>UPDATING SWEETNESS STATE...</span>
+            <span>ALOHA-Z GREETING START...</span>
             <span>{progress}%</span>
           </div>
           <div className="w-full h-5 bg-stone-200 border-2 border-dark-charcoal rounded-full p-1 overflow-hidden relative">

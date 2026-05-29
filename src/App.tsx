@@ -38,7 +38,7 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'));
 function SectionFallback() {
   return (
     <div className="w-full min-h-24 rounded-2xl border-2 border-dashed border-dark-charcoal/20 bg-white/50 flex items-center justify-center text-xs font-black text-dark-charcoal/50">
-      読み込み中...
+      準備中...
     </div>
   );
 }
@@ -265,17 +265,17 @@ export default function App() {
                 ✨ シークレットおやつ部屋 ✨
               </h4>
               <p className="text-xs text-dark-charcoal/80 leading-relaxed font-bold mb-4">
-                おめでとう！ロゴをいっぱい突っついたあなたへ、すまいる＆きゃらめるからの手書き（風）ひみつ秘密メッセージだよ！
+                おめでとう！ここを見つけたあなたは正真正銘あろはーずマスターだ！
               </p>
 
               <div className="bg-white p-4 border-2 border-dashed border-dark-charcoal rounded-2xl flex flex-col gap-4 text-left">
                 <div className="text-xs">
                   <span className="text-brand-orange font-bold font-display block mb-1">🌻 すまいる：</span>
-                  「見つけてくれてありがとうっ！🧡 秘密を暴くのが得意なあなたは、きっと今日も最高にハッピーになれるよ！ガチャの飴ちゃんも当たりが出る確率２倍だよっ！（うそ）🍭」
+                  「見つけてくれてありがとうっ！ いろんな仕掛けを作ったからたくさんあそんでいってね！」
                 </div>
                 <div className="text-xs border-t border-dashed border-stone-200 pt-3">
-                  <span className="text-brand-pink font-bold font-display block mb-1">🧸 きゃらめる：</span>
-                  「うわ、見つかっちゃったぁ…🎀。隠し場所つくるの楽しかったな。見つけてくれたお礼に、今日のおやつがプリンだったら私とお揃いだねっ。いつも応援ありがとう。大好きだよぉ。」
+                  <span className="text-brand-pink font-bold font-display block mb-1">🧸 きゃるめん：</span>
+                  「うわ、見つかっちゃったぁ…！細かいとこまで見てくれて嬉しいです！楽しんでいってね！」
                 </div>
               </div>
 
@@ -293,8 +293,8 @@ export default function App() {
       {/* Bubbly Scrolling Top Marquee header */}
       <div className="bg-brand-orange border-b-4 border-dark-charcoal py-2 text-white font-mono font-bold text-xs uppercase overflow-hidden tracking-wider select-none relative z-40">
         <div className="flex gap-12 whitespace-nowrap animate-[marquee_20s_linear_infinite]">
-          <span>★ DANCE WITH ALOHA-Z! ★元気いっぱいステップ!! ★ DANCE COVER DUO ALOHA-Z ★ SMILE & CARAMEL ENERGETIC LIVE STAMP ★ 踊って、笑って、あろはーづ！ ★</span>
-          <span>★ DANCE WITH ALOHA-Z! ★元気いっぱいステップ!! ★ DANCE COVER DUO ALOHA-Z ★ SMILE & CARAMEL ENERGETIC LIVE STAMP ★ 踊って、笑って、あろはーづ！ ★</span>
+          <span>★ DANCE WITH ALOHA-Z! ★元気いっぱいステップ!! ★ DANCE COVER DUO ALOHA-Z ★ SMILE & Kyarumen ENERGETIC LIVE STAMP ★ 踊って、笑って、あろはーず ★</span>
+          <span>★ DANCE WITH ALOHA-Z! ★元気いっぱいステップ!! ★ DANCE COVER DUO ALOHA-Z ★ SMILE & Kyarumen ENERGETIC LIVE STAMP ★ 踊って、笑って、あろはーず！ ★</span>
         </div>
       </div>
 
@@ -403,17 +403,17 @@ export default function App() {
               {/* Main Slogan Catchphrases */}
               <div className="space-y-1 mt-2">
                 <h2 className="text-2xl sm:text-3xl font-display font-black text-dark-charcoal leading-tight drop-shadow-sm">
-                  「ようこそあろはーずの秘密基地へ！」
+                  「ようこそあろはーずパークへ！」
                 </h2>
                 <p className="text-brand-pink font-semibold text-sm tracking-widest font-display animate-pulse">
-                  今日もちょっとハッピーに🍬 あなたの日常に、ちょこっと甘い時間を。
+                  あなたの笑顔があろはーずの幸せ！気軽に楽しんでいってね！
                 </p>
               </div>
 
               {/* Description body */}
               <p className="text-xs text-dark-charcoal/70 max-w-md leading-relaxed font-semibold">
-                私たちはダンスで笑顔をお届けする女性２人組踊り手ユニット「あろはーず」です！
-                イベントやYouTubeでマイペースに暴れてます。ここはファンお好みの秘密のテーマパークHP。
+                私たちは踊ってみたで笑顔をお届けする女性２人組踊り手ユニット「あろはーず」です！
+                YouTubeやニコニコ動画でマイペースに投稿しています。ここはいつも頑張ってる皆さんがくすっと笑顔になれるように2人で作ったテーマパークです⭐
                 おもちゃ屋さんを歩くように、いっぱい遊んでいってね！
               </p>
 
@@ -456,7 +456,7 @@ export default function App() {
             
             {/* Title icon */}
             <div className="absolute top-3 left-4 sm:left-6 bg-brand-orange border-2 border-dark-charcoal rounded-full px-3 sm:px-4 py-1 sm:py-1.5 font-sans font-extrabold text-xs sm:text-sm text-white shadow-[2px_2px_0_#4A3E3D] flex items-center gap-1">
-              <Tv size={14} /> 映像 & 音楽シアター
+              <Tv size={14} /> あろはーずシアター
             </div>
 
             {/* Left side: Retro CRT visual display showing selected cover video */}
@@ -502,7 +502,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Cute comments below the screen from SMILE & CARAMEL */}
+              {/* Cute comments below the screen from SMILE & Kyarumen */}
               <div className="bg-white border-2 border-dark-charcoal p-4 rounded-2xl shadow-sm text-xs flex flex-col gap-2">
                 <div className="text-brand-orange font-bold flex items-center gap-1">
                   💡 メンバーのイチオシ裏話
@@ -523,7 +523,7 @@ export default function App() {
                     }`}
                   >
                     <Heart size={12} fill={hasLikedVideo[activeVideo.id] ? 'currentColor' : 'none'} className={hasLikedVideo[activeVideo.id] ? 'animate-bounce' : ''} />
-                    <span>この動画を推す！ ({videoLikes[activeVideo.id] ?? activeVideo.heartsCount})</span>
+                    <span>この動画すき！ ({videoLikes[activeVideo.id] ?? activeVideo.heartsCount})</span>
                   </button>
                 </div>
               </div>
@@ -562,7 +562,7 @@ export default function App() {
             {/* Right side: Music Player Component */}
             <div className="w-full md:w-auto flex flex-col items-center justify-center p-0 sm:p-2">
               <h3 className="text-lg sm:text-xl font-display font-black text-dark-charcoal text-center mb-4 self-center md:self-start flex items-center gap-1 md:pl-2">
-                🎵 コツコツ8bitプレイヤー
+                🎵 あろはーずのマイリス
               </h3>
               <Suspense fallback={<SectionFallback />}>
                 <MusicPlayer />
@@ -638,7 +638,7 @@ export default function App() {
 
             {/* Copyright stamp */}
             <div className="text-[10px] font-mono font-bold text-dark-charcoal/50 uppercase leading-snug">
-              © 2026 ALOHA-Z CANDY POP THEMEPARK WEB SITE. <br className="md:hidden"/> All rights reserved (すまいる & きゃらめる).
+              © 2026 ALOHA-Z CANDY POP THEMEPARK WEB SITE. <br className="md:hidden"/> All rights reserved (すまいる & きゃるめん).
             </div>
 
             <button 

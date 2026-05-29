@@ -68,9 +68,9 @@ export default function ExchangeDiary() {
         {
           id: 'c2',
           diaryId: 'diary-2',
-          userName: 'みゆキャラメルラテコ',
+          userName: 'みゆきゃるめんラテコ',
           avatarSeed: '2',
-          content: 'きゃらめるちゃん可愛い…🧸 いちごタルトになりたかった。明日早起きふぁいとぉ！',
+          content: 'きゃるめんちゃん可愛い…🧸 いちごタルトになりたかった。明日早起きふぁいとぉ！',
           timestamp: '2026/05/25 00:05',
           stickyColor: 'pink'
         }
@@ -186,7 +186,7 @@ export default function ExchangeDiary() {
                 <div className="flex justify-between items-center mb-1">
                   <span className="opacity-80 font-mono text-[9px]">{entry.date}</span>
                   <span className="text-[10px]">
-                    {entry.author === 'smile' ? '🧡 すまいる' : '🎀 きゃらめる'}
+                    {entry.author === 'smile' ? '🧡 すまいる' : '🎀 きゃるめん'}
                   </span>
                 </div>
                 <div className="truncate font-semibold">{entry.title}</div>
@@ -216,7 +216,7 @@ export default function ExchangeDiary() {
               <div className={`px-3 py-1 border-2 border-dark-charcoal rounded-full text-xs font-bold ${
                 activeEntry.author === 'smile' ? 'bg-brand-orange text-white' : 'bg-brand-pink text-white'
               }`}>
-                {activeEntry.author === 'smile' ? '🌞 すまいる' : '🧸 きゃらめる'}
+                {activeEntry.author === 'smile' ? '🌞 すまいる' : '🧸 きゃるめん'}
               </div>
             </div>
 

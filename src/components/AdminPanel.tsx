@@ -536,7 +536,7 @@ export default function AdminPanel() {
   const handleSaveLetter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingLetter?.id || !editingLetter?.smileContent || !editingLetter?.caramelContent) {
-      alert("必須項目（対象シーズン・すまいるレター・きゃらめるレター）は省略できません！💌");
+      alert("必須項目（対象シーズン・すまいるレター・きゃるめんレター）は省略できません！💌");
       return;
     }
     await saveLetter({
@@ -1150,7 +1150,7 @@ export default function AdminPanel() {
                         className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold"
                       >
                         <option value="smile">すまいる 🌻</option>
-                        <option value="caramel">きゃらめる 🧸</option>
+                        <option value="caramel">きゃるめん 🧸</option>
                       </select>
                     </div>
                     <div className="space-y-1">
@@ -1252,7 +1252,7 @@ export default function AdminPanel() {
                         <span className={`text-[10px] font-black px-2 py-0.5 border border-dark-charcoal/10 rounded-full ${
                           dl.author === 'smile' ? 'bg-orange-50 text-brand-orange' : 'bg-rose-50 text-brand-pink'
                         }`}>
-                          {dl.author === 'smile' ? '🌞 すまいる執筆' : '🧸 きゃらめる執筆'}
+                          {dl.author === 'smile' ? '🌞 すまいる執筆' : '🧸 きゃるめん執筆'}
                         </span>
                         {dl.visible ? (
                           <span className="text-[9px] font-black text-emerald-650 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
@@ -1576,7 +1576,7 @@ export default function AdminPanel() {
                       <label className="block text-[10px] font-black text-dark-charcoal/60">編集するメンバー</label>
                       <select value={editingProfile.id || 'smile'} onChange={e => setEditingProfile({ ...editingProfile, id: e.target.value as 'smile' | 'caramel' })} className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold">
                         <option value="smile">すまいる</option>
-                        <option value="caramel">きゃらめる</option>
+                        <option value="caramel">きゃるめん</option>
                       </select>
                     </div>
                     <div className="space-y-1">
@@ -1758,7 +1758,7 @@ export default function AdminPanel() {
                       value={editingFortune.title || ''}
                       onChange={e => setEditingFortune({ ...editingFortune, title: e.target.value })}
                       className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold"
-                      placeholder="例: スマイル全快超大吉！！🌻"
+                      placeholder="例: すまいる全快超大吉！！🌻"
                     />
                   </div>
 
@@ -1818,7 +1818,7 @@ export default function AdminPanel() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black text-dark-charcoal/60">🧸 きゃらめるからの応援コメント</label>
+                      <label className="text-[10px] font-black text-dark-charcoal/60">🧸 きゃるめんからの応援コメント</label>
                       <textarea
                         value={editingFortune.commentCaramel || ''}
                         onChange={e => setEditingFortune({ ...editingFortune, commentCaramel: e.target.value })}
@@ -1990,7 +1990,7 @@ export default function AdminPanel() {
                       value={editingLetter.title || ''}
                       onChange={e => setEditingLetter({ ...editingLetter, title: e.target.value })}
                       className="w-full px-3 py-2 border-2 border-dark-charcoal rounded-xl text-xs font-bold"
-                      placeholder="例: すまいる＆きゃらめるからの愛のコンプリートレター"
+                      placeholder="例: すまいる＆きゃるめんからの愛のコンプリートレター"
                     />
                   </div>
 
@@ -2009,7 +2009,7 @@ export default function AdminPanel() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-[pink] font-semibold">🧸 きゃらめる執筆のお手紙本文 ({"{{name}}"}使用可能)</label>
+                    <label className="text-[10px] font-black text-[pink] font-semibold">🧸 きゃるめん執筆のお手紙本文 ({"{{name}}"}使用可能)</label>
                     <textarea
                       value={editingLetter.caramelContent || ''}
                       onChange={e => setEditingLetter({ ...editingLetter, caramelContent: e.target.value })}
@@ -2056,7 +2056,7 @@ export default function AdminPanel() {
                       </div>
                       <h4 className="text-xs md:text-sm font-black text-dark-charcoal mt-1">{letItem.title}</h4>
                       <span className="text-[10px] text-stone-400 font-semibold block">Smile message: {letItem.smileContent?.slice(0, 30)}...</span>
-                      <span className="text-[10px] text-stone-400 font-semibold block">Caramel message: {letItem.caramelContent?.slice(0, 30)}...</span>
+                      <span className="text-[10px] text-stone-400 font-semibold block">Kyarumen message: {letItem.caramelContent?.slice(0, 30)}...</span>
                     </div>
 
                     <div className="flex gap-1.5 shrink-0">

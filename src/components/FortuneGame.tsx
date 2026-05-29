@@ -375,7 +375,7 @@ export default function FortuneGame() {
 落ち込んじゃう時や、今日ちょっと力が出ないなーって日も、私たちが送ったお札みくじを見て、少しでもニコニコになってくれたら嬉しいなッ！
 
 これからも${visitorName || 'あなた'}の特等席で、いーーーっぱい踊り狂っていくので、ずっと見つめててね？
-２人は永遠に、${visitorName || 'あなた'}のスーパーヒーロー・スマイルパフォーマーです！だいすきー！
+２人は永遠に、${visitorName || 'あなた'}のスーパーヒーロー・すまいるパフォーマーです！だいすきー！
 
 すまいるより 🌻（ハグ！）`;
 
@@ -386,14 +386,14 @@ export default function FortuneGame() {
 運勢のすべてを引き当ててくれて、ありがとうございます。おめでとうございます！
 いつも私たちの活動を、お布団の中から…あ、違う、心の中から暖かく見守ってくれて本当に感謝してます。
 
-甘々のキャラメルパフェみたいに、${visitorName || 'あなた'}の毎日が甘くてハッピーな幸せでいっぱい満たされますように。きゃらめるのあざとビームもたくさんお札に注入しておきました（笑）
+甘々のきゃるめんパフェみたいに、${visitorName || 'あなた'}の毎日が甘くてハッピーな幸せでいっぱい満たされますように。きゃるめんのあざとビームもたくさんお札に注入しておきました（笑）
 
 もし転んじゃっても、のんびり、ゆっくり休んでから、明日またいっしょにスキップしよう？
 
 甘やかされたくなったら、いつでも私たちのところに帰ってきてくださいね。
 ${visitorName || 'あなた'}がずっと笑顔でいられるように。
 
-きゃらめるより 🎀（むにゃ…おやすみなさい…）`;
+きゃるめんより 🎀（むにゃ…おやすみなさい…）`;
 
   // Rich HTML5 Canvas image rendering tool for downloading
   const handleDownloadImage = async (fortune: FortuneResult) => {
@@ -531,10 +531,10 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
       ctx.font = 'bold 14px sans-serif';
       wrapText(ctx, fortune.commentSmile, 70, 545, width - 140, 22);
 
-      // Draw Caramel comment on card
+      // Draw Kyarumen comment on card
       ctx.fillStyle = '#FF69B4';
       ctx.font = '900 14px sans-serif';
-      ctx.fillText('🧸 きゃらめるのメッセージ', 60, 620);
+      ctx.fillText('🧸 きゃるめんのメッセージ', 60, 620);
       ctx.fillStyle = '#4A2C2A';
       ctx.font = 'bold 14px sans-serif';
       wrapText(ctx, fortune.commentCaramel, 70, 645, width - 140, 22);
@@ -880,10 +880,10 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                     </p>
                   </div>
 
-                  {/* Caramel block */}
+                  {/* Kyarumen block */}
                   <div className="bg-white p-3 rounded-xl border border-stone-200">
                     <span className="text-brand-pink text-xs font-black flex items-center gap-1 mb-1">
-                      <Heart size={14} className="fill-current" /> きゃらめるお墨付き
+                      <Heart size={14} className="fill-current" /> きゃるめんお墨付き
                     </span>
                     <div className="flex gap-0.5 mb-1.5 text-brand-pink">
                       {Array.from({ length: 5 }).map((_, i) => (
@@ -1106,7 +1106,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
             <div className="text-center pt-4 pb-4 mb-6 border-b-2 border-dashed border-dark-charcoal/20">
               <span className="text-2xl">💌</span>
               <h3 className="text-xl md:text-2xl font-display font-black text-dark-charcoal mt-1">
-                すまいる＆きゃらめるからの愛のコンプリートレター
+                すまいる＆きゃるめんからの愛のコンプリートレター
               </h3>
               <p className="text-[10px] text-brand-pink font-semibold font-mono tracking-wider mt-0.5">
                 SPECIAL REWARD LETTER FROM ALOHA-Z FOR ALL-CLEARED FANS
@@ -1158,12 +1158,12 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                   </p>
                 </div>
 
-                {/* Caramel Side message */}
+                {/* Kyarumen Side message */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">🧸</span>
                     <h5 className="text-sm font-black text-brand-pink bg-brand-pink/10 px-3 py-1 rounded-full border border-brand-pink/20">
-                      きゃらめる より 🧸
+                      きゃるめん より 🧸
                     </h5>
                   </div>
 
@@ -1185,7 +1185,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                     💛 SMILE 100%
                   </div>
                   <div className="bg-brand-pink text-white font-black text-[9px] px-3 py-1 rounded-full border border-dark-charcoal shadow-sm rotate-[-3deg]">
-                    💗 CARAMEL 100%
+                    💗 Kyarumen 100%
                   </div>
                 </div>
               </div>
@@ -1227,7 +1227,7 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
                 お名前を教えてね！
               </h3>
               <p className="text-xs text-dark-charcoal/70 font-semibold mb-6">
-                すまいるときゃらめるが、あなたのために心を込めて、お名前を呼ぶ特別な手紙をお届けします💌
+                すまいるときゃるめんが、あなたのために心を込めて、お名前を呼ぶ特別な手紙をお届けします💌
               </p>
 
               <div className="space-y-4 mb-6">

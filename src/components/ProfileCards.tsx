@@ -54,7 +54,7 @@ export default function ProfileCards() {
                   : 'bg-rose-50 text-brand-pink hover:bg-rose-100'
               }`}
             >
-              きゃらめる 🧸
+              きゃるめん 🧸
               {activeTab === 'caramel' && (
                 <span className="absolute -top-2 -right-2 text-xs text-brand-yellow animate-ping">✨</span>
               )}

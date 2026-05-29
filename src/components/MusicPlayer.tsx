@@ -19,7 +19,7 @@ const FALLBACK_TRACKS: MusicTrack[] = [
   {
     id: 'track-2',
     title: '夕焼けメロンソーダ 🥤',
-    description: 'きゃらめる選曲！',
+    description: 'きゃるめん選曲！',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     likes: 128,

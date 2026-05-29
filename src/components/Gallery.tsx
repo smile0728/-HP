@@ -136,7 +136,7 @@ export default function Gallery() {
 
       {/* Album Description */}
       <p className="text-xs md:text-sm text-dark-charcoal/80 font-bold leading-relaxed bg-brand-yellow/10 p-3 rounded-2xl border-2 border-dashed border-brand-orange/20">
-        📌 あろはーず(スマイル＆キャラメル)の日記から、とっておきの写真を集めたお楽しみアルバム！気になる写真をクリックして、大きな写真とアルバムメッセージを読んでみてね🍭
+        📌 あろはーず(すまいる＆きゃるめん)の日記から、とっておきの写真を集めたお楽しみアルバム！気になる写真をクリックして、大きな写真とアルバムメッセージを読んでみてね🍭
       </p>
 
       {/* Album Content View - Looks like a vintage paper/ring notebook layout */}

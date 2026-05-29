@@ -122,7 +122,7 @@ const DEFAULT_MUSIC_TRACKS: MusicTrack[] = [
   {
     id: 'track-2',
     title: '夕焼けメロンソーダ 🥤',
-    description: 'きゃらめる選曲！',
+    description: 'きゃるめん選曲！',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     likes: 128,
@@ -687,8 +687,8 @@ export interface PhotoEntry {
 const DEFAULT_PHOTOS: PhotoEntry[] = [
   { id: 'p1', title: '結成日のワンショット', imageUrl: 'https://picsum.photos/seed/photo1/500/500', comment: 'あろはーずとしての第一歩を描いた、記念すべき日！ドキドキが止まりませんでした✨', date: '2025.04.01', visible: true },
   { id: 'p2', title: 'スタジオ練習でヘトヘト（笑）', imageUrl: 'https://picsum.photos/seed/photo2/500/500', comment: '3時間ぶっ続けでハッピーシンセサイザを踊りきったあとの2人（笑）お疲れ様でした！', date: '2025.05.15', visible: true },
-  { id: 'p3', title: 'ひまわり畑でのロケ撮影！🌻', imageUrl: 'https://picsum.photos/seed/photo3/500/500', comment: '一面に咲くひまわり畑でお日様を浴びながら撮影！スマイル全開のベストショットです🌻', date: '2025.08.21', visible: true },
-  { id: 'p4', title: 'お気に入りキャラメルパフェ！🍧', imageUrl: 'https://picsum.photos/seed/photo4/500/500', comment: 'ダンス練習のご褒美に食べた巨大パフェ。キャラメルソースがたっぷりで超幸せでした🍨', date: '2025.11.12', visible: true },
+  { id: 'p3', title: 'ひまわり畑でのロケ撮影！🌻', imageUrl: 'https://picsum.photos/seed/photo3/500/500', comment: '一面に咲くひまわり畑でお日様を浴びながら撮影！すまいる全開のベストショットです🌻', date: '2025.08.21', visible: true },
+  { id: 'p4', title: 'お気に入りきゃるめんパフェ！🍧', imageUrl: 'https://picsum.photos/seed/photo4/500/500', comment: 'ダンス練習のご褒美に食べた巨大パフェ。きゃるめんソースがたっぷりで超幸せでした🍨', date: '2025.11.12', visible: true },
   { id: 'p5', title: 'ステージ裏のドタバタ２人組', imageUrl: 'https://picsum.photos/seed/photo5/500/500', comment: 'いよいよ本番直前のステージ裏！お互いの背中を叩いて気合いを入れているところをパシャリ！', date: '2026/02/14', visible: true },
   { id: 'p6', title: '帰り道の夕焼けポーズ！✨', imageUrl: 'https://picsum.photos/seed/photo6/500/500', comment: '帰り道の夕暮れ時。今日の夕焼けはオレンジ色できれいだったな🌇また明日も楽しもうね！', date: '2026/05/18', visible: true }
 ];
@@ -784,8 +784,8 @@ const DEFAULT_DIARIES: DiaryRecord[] = [
     date: '2026/05/24',
     author: 'smile',
     title: '今日から新コーナー！交換日記はじめるよ！✨',
-    content: 'みんなあろはーず！すまいるだよ！今日からこのHPで『交換日記コーナー』をスタートすることになりましたー！パチパチパチ👏\n\nSNSだと言いきれない2人の日常とか、最近買った変なおもちゃの話とか（笑）、ゆるーく届けていきます！きゃらめる、ちゃんと毎日書いてね〜〜〜！！約束！！🌻🍊',
-    response: 'きゃらめる：約束の指切り、すでに3回くらいしてる気がする…（がんばります！🥺）',
+    content: 'みんなあろはーず！すまいるだよ！今日からこのHPで『交換日記コーナー』をスタートすることになりましたー！パチパチパチ👏\n\nSNSだと言いきれない2人の日常とか、最近買った変なおもちゃの話とか（笑）、ゆるーく届けていきます！きゃるめん、ちゃんと毎日書いてね〜〜〜！！約束！！🌻🍊',
+    response: 'きゃるめん：約束の指切り、すでに3回くらいしてる気がする…（がんばります！🥺）',
     stickers: ['🌞', '🔥', '🍊'],
     visible: true
   },
@@ -889,7 +889,7 @@ export interface AnnouncementEntry {
 
 const DEFAULT_ANNOUNCEMENTS: AnnouncementEntry[] = [
   { id: 'a1', date: '2026/05/25', title: '【重要】ホームページを新しくオープンしました！🌻🧸', content: 'あろはーずオフィシャルWebサイトがついに大公開！メンバープロフィールのほか、新コーナー「交換日記」や、1日1回引ける「開運おみくじガチャ」も遊べるよ！ぜひ毎日見にきてね🍭', visible: true },
-  { id: 'a2', date: '2026/05/28', title: '【お披露目予告】あろはーず重大発表の生配信決定！？', content: 'メンバーのすまいる＆きゃらめるから重大なお知らせ…！？結成記念をお祝いするプレミア生配信を企画中。詳細はのちほどお知らせします！お見逃しなく✨', visible: true }
+  { id: 'a2', date: '2026/05/28', title: '【お披露目予告】あろはーず重大発表の生配信決定！？', content: 'メンバーのすまいる＆きゃるめんから重大なお知らせ…！？結成記念をお祝いするプレミア生配信を企画中。詳細はのちほどお知らせします！お見逃しなく✨', visible: true }
 ];
 
 export const getAnnouncements = async (adminView = false): Promise<AnnouncementEntry[]> => {
@@ -991,7 +991,7 @@ const DEFAULT_FORTUNES_DB: GachaFortune[] = [
     resultName: '超大吉',
     resultMessage: '今日は星がピカピカ！何をやってもあろはーずが全力で応援しているような、スーパーミラクルな１日になるよ！運気が宇宙を越えて大気圏突入！',
     commentSmile: '「もう最強！お菓子食べ放題、ガチャガチャ全種コンプできちゃうかも！？」',
-    commentCaramel: '「きゃらめるも、お布団の中からお祈りしてるね…むにゃむにゃ…」',
+    commentCaramel: '「きゃるめんも、お布団の中からお祈りしてるね…むにゃむにゃ…」',
     luckyItem: 'オレンジ味のハードグミキャンディ',
     luckyDance: '「ファンサ」のサビラストの全力手をふるところ！',
     ratingSmile: 5,
@@ -1021,12 +1021,12 @@ const DEFAULT_FORTUNES_DB: GachaFortune[] = [
   {
     id: '激吉',
     season: '春シーズン',
-    title: '甘口あざと！きゃらめる激吉🧸',
+    title: '甘口あざと！きゃるめん激吉🧸',
     resultName: '激吉',
-    resultMessage: 'きゃらめるのあざとパワーが炸裂。いつもは恥ずかしいセリフも、今日なら言えちゃうかも？周囲の人がみんなあなたに甘々になります。',
-    commentSmile: '「きゃらめるが激吉なんてズルい！あざとビーム分けて〜〜！」',
+    resultMessage: 'きゃるめんのあざとパワーが炸裂。いつもは恥ずかしいセリフも、今日なら言えちゃうかも？周囲の人がみんなあなたに甘々になります。',
+    commentSmile: '「きゃるめんが激吉なんてズルい！あざとビーム分けて〜〜！」',
     commentCaramel: '「ふふ、今日は周りのみんなにワガママを３つまで言っていいよ〜？🎀」',
-    luckyItem: 'キャラメルラテ（ホイップマシマシで！）',
+    luckyItem: 'きゃるめんラテ（ホイップマシマシで！）',
     luckyDance: '「おねがいダーリン」の首かしげポーズ( *´艸｀)',
     ratingSmile: 3,
     ratingCaramel: 5,
@@ -1088,9 +1088,59 @@ const DEFAULT_FORTUNES_DB: GachaFortune[] = [
   }
 ];
 
+const EXTRA_DEFAULT_FORTUNES: GachaFortune[] = Array.from({ length: 14 }, (_, index) => {
+  const number = index + 7;
+  const padded = String(number).padStart(2, '0');
+  const themes = [
+    ['きらきら吉', '小さなうれしいことを見つけやすい日。いつもの道でも、今日はちょっとだけ特別に見えるかも。', 'お気に入りのヘアピン', '指先で星を描くようにターン'],
+    ['にこにこ吉', '笑顔で話しかけると、まわりの空気がふわっと明るくなる日。短い挨拶がラッキーを連れてきます。', '丸いキャンディ', '両手をほっぺに添えるポーズ'],
+    ['ぽかぽか吉', '急がず、あたたかい気持ちで進むと良い日。深呼吸をひとつ入れるだけで運気が整います。', 'あたたかいミルクティー', 'ゆっくり左右にステップ'],
+    ['わくわく吉', '新しい動画や音楽に出会うと元気をもらえる日。気になったものはすぐメモしておこう。', 'カラフルなメモ帳', 'リズムに合わせてクラップ'],
+    ['ふわふわ吉', '力を抜いたほうがうまくいく日。がんばりすぎず、好きなものに少し寄り道してね。', '白いリボン', 'ふわっと手を広げる振り'],
+    ['ぱちぱち吉', '誰かを褒めると自分にも良いことが返ってくる日。拍手の気持ちを忘れずに。', '小さなシール', '拍手から始まるステップ'],
+    ['るんるん吉', '歩くテンポを少し上げると気分も上がる日。好きな曲を思い浮かべて進もう。', '明るい色の靴下', '軽くスキップする振り'],
+    ['ほっと吉', '休憩が運気を育てる日。スマホを置いて、目を閉じる時間を少しだけ作ってみて。', 'お気に入りのマグカップ', '肩をゆるめる深呼吸ポーズ'],
+    ['きゅん吉', 'かわいいものに囲まれると元気が出る日。小物や待ち受けを少しだけ変えるのもおすすめ。', 'ハートのチャーム', '胸の前で小さくハート'],
+    ['はなまる吉', 'やり残しをひとつ片付けると、気分がすっきりする日。完璧じゃなくて大丈夫。', '赤ペンかチェックマーク', '最後に大きく丸を作る振り'],
+    ['ぴかぴか吉', '身の回りを少し整えると運気が光る日。机やバッグの中を軽く片付けてみて。', '透明ポーチ', 'きらっと指を差すポーズ'],
+    ['すいすい吉', '流れに乗るとうまく進む日。迷ったら、いちばん軽い一歩から始めよう。', '水色の小物', '波みたいに腕を動かす振り'],
+    ['どきどき吉', '少し緊張することに挑戦すると成長できる日。勇気は小さく出してもちゃんと届きます。', '星形ステッカー', '胸に手を当ててジャンプ'],
+    ['ありがとう吉', '感謝を伝えると心が明るくなる日。短い「ありがとう」が今日の合言葉です。', '手書きのメモ', '手を振ってからおじぎ']
+  ];
+  const [resultName, resultMessage, luckyItem, luckyDance] = themes[index];
+
+  return {
+    id: `fortune-${padded}`,
+    season: '通常シーズン',
+    title: `あろはーず${resultName}`,
+    resultName,
+    resultMessage,
+    imageUrl: '',
+    commentSmile: '「今日もいい感じ！その一歩、すまいるが全力で応援してるよ！」',
+    commentCaramel: '「無理しすぎず、きゃるめんと一緒にゆっくり進もうね。」',
+    luckyItem,
+    luckyDance,
+    ratingSmile: 4,
+    ratingCaramel: 4,
+    startDate: '',
+    endDate: '',
+    visible: true,
+    sortOrder: number
+  };
+});
+
+const ALL_DEFAULT_FORTUNES: GachaFortune[] = [...DEFAULT_FORTUNES_DB, ...EXTRA_DEFAULT_FORTUNES];
+
+function mergeWithDefaultFortunes(items: GachaFortune[]): GachaFortune[] {
+  const merged = new Map<string, GachaFortune>();
+  ALL_DEFAULT_FORTUNES.forEach((fortune) => merged.set(fortune.id, fortune));
+  items.forEach((fortune) => merged.set(fortune.id, fortune));
+  return Array.from(merged.values()).sort((a, b) => a.sortOrder - b.sortOrder).slice(0, 20);
+}
+
 export const getFortunes = async (adminView = false): Promise<GachaFortune[]> => {
   if (isMockFirebase) {
-    const list = getLocalStorageData<GachaFortune>('fortunes', DEFAULT_FORTUNES_DB);
+    const list = mergeWithDefaultFortunes(getLocalStorageData<GachaFortune>('fortunes', ALL_DEFAULT_FORTUNES));
     return adminView ? list : list.filter(p => p.visible);
   }
 
@@ -1119,17 +1169,17 @@ export const getFortunes = async (adminView = false): Promise<GachaFortune[]> =>
         sortOrder: Number(d.sortOrder ?? 99)
       });
     });
-    const sorted = items.sort((a, b) => a.sortOrder - b.sortOrder);
+    const sorted = mergeWithDefaultFortunes(items);
     return adminView ? sorted : sorted.filter(p => p.visible);
   } catch (error) {
     console.warn("Could not query Firestore fortunes, utilizing fallback storage", error);
-    const list = getLocalStorageData<GachaFortune>('fortunes', DEFAULT_FORTUNES_DB);
+    const list = mergeWithDefaultFortunes(getLocalStorageData<GachaFortune>('fortunes', ALL_DEFAULT_FORTUNES));
     return adminView ? list : list.filter(p => p.visible);
   }
 };
 
 export const saveFortune = async (fortune: GachaFortune): Promise<void> => {
-  const statsList = getLocalStorageData<GachaFortune>('fortunes', DEFAULT_FORTUNES_DB);
+  const statsList = getLocalStorageData<GachaFortune>('fortunes', ALL_DEFAULT_FORTUNES);
   const foundIdx = statsList.findIndex(p => p.id === fortune.id);
   if (foundIdx !== -1) {
     statsList[foundIdx] = fortune;
@@ -1198,10 +1248,10 @@ const DEFAULT_LETTERS_DB: SeasonLetter[] = [
   {
     id: 'season-letter-1',
     season: '春シーズン',
-    title: 'すまいる＆きゃらめるからの愛のコンプリートレター',
+    title: 'すまいる＆きゃるめんからの愛のコンプリートレター',
     content: '大好きな{{name}}へ🌻🧸\n\nおみくじ図鑑のコンプリート、本当に本当にありがとーー！！\n毎日毎日引いてくれてる{{name}}の姿を想像してたら、あろはーずの心のハッピーメーターが1万倍になっちゃいました！',
     smileContent: '大好きな{{name}}へ🌻\nおみくじコプリート本当にうれしいッ！毎日楽しんでくれてありがとう。落ち込んじゃう時や力が出ないなーって日も、私たちが送ったおみくじを見てニコニコになってくれたらとってもうれしいなッ！これからも特等席でいーーっぱい踊っていくから、ずーっと見ててね？大好きーー！ 🌻',
-    caramelContent: 'いつも温かく支えてくれる{{name}}へ🧸\nコンプリートしてくれてありがとう。のんびり、あせらず、きゃらめるのペースで日記もダンスもがんばれてるの。{{name}}が見守ってくれてるおかげだよ。これからも２人と一緒に、いっぱーい甘〜い時間をすごそうな？約束ね。🎀',
+    caramelContent: 'いつも温かく支えてくれる{{name}}へ🧸\nコンプリートしてくれてありがとう。のんびり、あせらず、きゃるめんのペースで日記もダンスもがんばれてるの。{{name}}が見守ってくれてるおかげだよ。これからも２人と一緒に、いっぱーい甘〜い時間をすごそうな？約束ね。🎀',
     visible: true,
     startDate: '',
     endDate: ''
