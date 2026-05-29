@@ -13,31 +13,36 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const alohazImage = '/picture/loading-alohaz.png';
 
   useEffect(() => {
+    [smileImage, kyarumenImage, alohazImage].forEach((src) => {
+      const image = new Image();
+      image.src = src;
+    });
+
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(progressInterval);
           return 100;
         }
-        return prev + 2;
+        return prev + 1;
       });
-    }, 40);
+    }, 55);
 
     const smileTimer = setTimeout(() => {
       setStage('smile');
-    }, 650);
+    }, 1100);
 
     const kyarumenTimer = setTimeout(() => {
       setStage('kyarumen');
-    }, 1250);
+    }, 2600);
 
     const alohaTimer = setTimeout(() => {
       setStage('aloha');
-    }, 1850);
+    }, 4100);
 
     const loadedTimer = setTimeout(() => {
       setStage('loaded');
-    }, 2800);
+    }, 6100);
 
     return () => {
       clearInterval(progressInterval);
