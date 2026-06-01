@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Play, Radio, Music, Heart, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
-import { getMusicTracks } from '../lib/firebase';
+import { getLikeEngagement, getMusicTracks, toggleLikeReaction } from '../lib/firebase';
 import { MusicTrack } from '../types';
 import { toYouTubeEmbedUrl, toYouTubeThumbnailUrl } from '../lib/youtube';
 
@@ -31,31 +31,50 @@ const FALLBACK_TRACKS: MusicTrack[] = [
 export default function MusicPlayer() {
   const [tracks, setTracks] = useState<MusicTrack[]>(FALLBACK_TRACKS);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [likes, setLikes] = useState(FALLBACK_TRACKS[0].likes);
-  const [isLiked, setIsLiked] = useState(false);
+  const [likesByTrackId, setLikesByTrackId] = useState<Record<string, number>>({
+    [FALLBACK_TRACKS[0].id]: FALLBACK_TRACKS[0].likes,
+    [FALLBACK_TRACKS[1].id]: FALLBACK_TRACKS[1].likes,
+  });
+  const [likedByTrackId, setLikedByTrackId] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     getMusicTracks(false)
-      .then((items) => {
-        if (items.length === 0) return;
-        setTracks(items);
+      .then(async (items) => {
+        const nextTracks = items.length > 0 ? items : FALLBACK_TRACKS;
+        setTracks(nextTracks);
         setCurrentTrackIndex(0);
-        setLikes(items[0].likes);
+        const baseCounts = nextTracks.reduce<Record<string, number>>((acc, track) => {
+          acc[track.id] = track.likes;
+          return acc;
+        }, {});
+        setLikesByTrackId(baseCounts);
+        const engagement = await getLikeEngagement('music_track', nextTracks.map((track) => track.id), baseCounts);
+        setLikesByTrackId(engagement.counts);
+        setLikedByTrackId(engagement.liked);
       })
       .catch(() => {});
   }, []);
 
   const currentTrack = tracks[currentTrackIndex] || FALLBACK_TRACKS[0];
   const embedUrl = toYouTubeEmbedUrl(currentTrack.youtubeUrl);
-
-  useEffect(() => {
-    setLikes(currentTrack.likes);
-    setIsLiked(false);
-  }, [currentTrack.id, currentTrack.likes]);
+  const likes = likesByTrackId[currentTrack.id] ?? currentTrack.likes;
+  const isLiked = Boolean(likedByTrackId[currentTrack.id]);
 
   const handleHeartClick = () => {
-    setLikes((prev) => (isLiked ? Math.max(prev - 1, 0) : prev + 1));
-    setIsLiked((prev) => !prev);
+    const nextLiked = !isLiked;
+    setLikesByTrackId((prev) => ({
+      ...prev,
+      [currentTrack.id]: nextLiked ? (prev[currentTrack.id] ?? currentTrack.likes) + 1 : Math.max((prev[currentTrack.id] ?? 0) - 1, 0)
+    }));
+    setLikedByTrackId((prev) => ({ ...prev, [currentTrack.id]: nextLiked }));
+
+    toggleLikeReaction('music_track', currentTrack.id, nextLiked).catch(() => {
+      setLikedByTrackId((prev) => ({ ...prev, [currentTrack.id]: isLiked }));
+      setLikesByTrackId((prev) => ({
+        ...prev,
+        [currentTrack.id]: isLiked ? (prev[currentTrack.id] ?? currentTrack.likes) + 1 : Math.max((prev[currentTrack.id] ?? 0) - 1, 0)
+      }));
+    });
   };
 
   const stepTrack = (delta: number) => {

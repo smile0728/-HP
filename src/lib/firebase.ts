@@ -562,6 +562,20 @@ export interface DailyStat {
   videoClicks: number;
 }
 
+type LikeKind = 'dance_video' | 'music_track';
+
+interface LikeReaction {
+  id: string;
+  kind: LikeKind;
+  targetId: string;
+  authorUid: string;
+  createdAt: string;
+}
+
+function getLikeReactionId(kind: LikeKind, targetId: string, uid: string) {
+  return `${kind}_${targetId}_${uid}`;
+}
+
 export const logTelemetryEvent = async (type: keyof Omit<DailyStat, 'id'>) => {
   const todayStr = new Date().toISOString().split('T')[0];
   if (isMockFirebase) {
@@ -722,6 +736,92 @@ export const deleteFanComment = async (comment: FanComment): Promise<void> => {
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
+};
+
+export const getLikeEngagement = async (
+  kind: LikeKind,
+  targetIds: string[],
+  baseCounts: Record<string, number>
+): Promise<{ counts: Record<string, number>; liked: Record<string, boolean> }> => {
+  const counts = { ...baseCounts };
+  const liked: Record<string, boolean> = {};
+  const targetSet = new Set(targetIds);
+
+  if (targetIds.length === 0) {
+    return { counts, liked };
+  }
+
+  if (isMockFirebase) {
+    const reactions = getLocalStorageData<LikeReaction>('like_reactions', []);
+    reactions
+      .filter((reaction) => reaction.kind === kind && targetSet.has(reaction.targetId))
+      .forEach((reaction) => {
+        counts[reaction.targetId] = (counts[reaction.targetId] || 0) + 1;
+      });
+    return { counts, liked };
+  }
+
+  const user = await ensureFanUser();
+  const uid = user?.uid || '';
+
+  try {
+    const snapshot = await getDocs(query(collection(db, 'like_reactions'), where('kind', '==', kind)));
+    snapshot.forEach((reactionDoc) => {
+      const data = reactionDoc.data();
+      const targetId = typeof data.targetId === 'string' ? data.targetId : '';
+      const authorUid = typeof data.authorUid === 'string' ? data.authorUid : '';
+      if (!targetSet.has(targetId)) return;
+
+      counts[targetId] = (counts[targetId] || 0) + 1;
+      if (authorUid && authorUid === uid) {
+        liked[targetId] = true;
+      }
+    });
+  } catch (error) {
+    console.warn('Could not load like reactions', error);
+  }
+
+  return { counts, liked };
+};
+
+export const toggleLikeReaction = async (
+  kind: LikeKind,
+  targetId: string,
+  shouldLike: boolean
+): Promise<boolean> => {
+  if (isMockFirebase) {
+    const reactions = getLocalStorageData<LikeReaction>('like_reactions', []);
+    const mockUid = 'local-user';
+    const id = getLikeReactionId(kind, targetId, mockUid);
+    if (shouldLike) {
+      if (!reactions.some((reaction) => reaction.id === id)) {
+        reactions.push({ id, kind, targetId, authorUid: mockUid, createdAt: new Date().toISOString() });
+      }
+      saveLocalStorageData('like_reactions', reactions);
+      return true;
+    }
+    saveLocalStorageData('like_reactions', reactions.filter((reaction) => reaction.id !== id));
+    return false;
+  }
+
+  const user = await ensureFanUser();
+  if (!user) throw new Error('いいね保存用の匿名アカウントを作成できませんでした。');
+
+  const id = getLikeReactionId(kind, targetId, user.uid);
+  const reactionRef = doc(db, 'like_reactions', id);
+
+  if (shouldLike) {
+    await setDoc(reactionRef, {
+      kind,
+      targetId,
+      authorUid: user.uid,
+      createdAt: new Date().toISOString()
+    });
+    return true;
+  }
+
+  await deleteDoc(reactionRef);
+  return false;
 };
 
 // ----------------------------------------------------

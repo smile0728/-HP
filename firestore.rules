@@ -175,6 +175,18 @@ service cloud.firestore {
               data.stickyColor == 'blue');
     }
 
+    function isValidLikeReaction(data, reactionId) {
+      return data.keys().hasAll(['kind', 'targetId', 'authorUid', 'createdAt']) &&
+             data.keys().size() <= 4 &&
+             data.kind is string &&
+             (data.kind == 'dance_video' || data.kind == 'music_track') &&
+             isValidId(data.targetId) &&
+             data.authorUid is string &&
+             data.authorUid == request.auth.uid &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             reactionId == data.kind + '_' + data.targetId + '_' + request.auth.uid;
+    }
+
     function isValidDanceVideo(data) {
       return data.keys().hasAll(['title', 'description', 'youtubeUrl', 'heartsCount', 'visible', 'sortOrder']) &&
              data.keys().size() <= 12 &&
@@ -317,6 +329,13 @@ service cloud.firestore {
     match /fan_comments/{commentId} {
       allow read: if true;
       allow create: if isSignedIn() && isValidId(commentId) && isValidFanComment(request.resource.data);
+      allow update: if false;
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
+    }
+
+    match /like_reactions/{reactionId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidLikeReaction(request.resource.data, reactionId);
       allow update: if false;
       allow delete: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
     }

@@ -103,12 +103,16 @@ export default function App() {
         if (videos.length === 0) return;
         setDanceVideos(videos);
         setActiveVideo(videos[0]);
-        setVideoLikes(
-          videos.reduce<Record<string, number>>((acc, video) => {
+        const baseCounts = videos.reduce<Record<string, number>>((acc, video) => {
             acc[video.id] = video.heartsCount;
             return acc;
-          }, {})
-        );
+          }, {});
+        setVideoLikes(baseCounts);
+
+        const { getLikeEngagement } = await import('./lib/firebase');
+        const engagement = await getLikeEngagement('dance_video', videos.map((video) => video.id), baseCounts);
+        setVideoLikes(engagement.counts);
+        setHasLikedVideo(engagement.liked);
       })
       .catch(() => {});
   }, []);
@@ -187,7 +191,8 @@ export default function App() {
   };
 
   const handleLikeVideo = (videoId: string) => {
-    const prevLiked = hasLikedVideo[videoId];
+    const prevLiked = Boolean(hasLikedVideo[videoId]);
+    const nextLiked = !prevLiked;
     if (prevLiked) {
       setVideoLikes((prev) => ({ ...prev, [videoId]: Math.max((prev[videoId] ?? 0) - 1, 0) }));
       setHasLikedVideo((prev) => ({ ...prev, [videoId]: false }));
@@ -209,6 +214,16 @@ export default function App() {
         osc.stop(audioCtx.currentTime + 0.2);
       } catch (_) {}
     }
+
+    import('./lib/firebase')
+      .then(({ toggleLikeReaction }) => toggleLikeReaction('dance_video', videoId, nextLiked))
+      .catch(() => {
+        setHasLikedVideo((prev) => ({ ...prev, [videoId]: prevLiked }));
+        setVideoLikes((prev) => ({
+          ...prev,
+          [videoId]: prevLiked ? (prev[videoId] ?? activeVideo.heartsCount) + 1 : Math.max((prev[videoId] ?? 0) - 1, 0)
+        }));
+      });
   };
 
   const handleSnsClick = () => {

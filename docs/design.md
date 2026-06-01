@@ -360,6 +360,7 @@ Google Fonts から以下を読み込む。
 - 手紙: `getLetters`, `saveLetter`, `deleteLetter`
 - 統計: `logTelemetryEvent`, `getDailyStats`
 - 共有コメント: `getFanComments`, `saveFanComment`, `deleteFanComment`
+- 推し/いいね: `getLikeEngagement`, `toggleLikeReaction`
 - ファン用ガチャ状態: `ensureFanUser`, `getUserGachaState`, `saveUserGachaState`
 
 Firebase がモック設定、または Firestore 読み込みに失敗した場合は `alohaz_firestore_` 接頭辞の `localStorage` データを使用する。
@@ -399,6 +400,7 @@ Firebase がモック設定、または Firestore 読み込みに失敗した場
 - `admins/{uid}` は本人または管理者が個別取得でき、一覧取得と書き込みは管理者に限定する。
 - `users/{uid}/gacha/state` は `request.auth.uid == uid` の本人だけが読み書きできる。
 - `fan_comments/{commentId}` は誰でも読める。作成は匿名ログイン済みユーザーに限定し、削除は投稿者本人または管理者に限定する。
+- `like_reactions/{reactionId}` は誰でも読める。作成は匿名ログイン済みユーザーに限定し、`kind_targetId_uid` 形式のドキュメントIDで1対象1ユーザー1回に制限する。
 - Firebase の API キーはクライアント設定として含まれるため、アクセス制御は Firestore ルール側で担保する。
 
 ## 実装上の注意点
