@@ -175,7 +175,7 @@ service cloud.firestore {
               data.stickyColor == 'blue');
     }
 
-    function isValidLikeReaction(data, reactionId) {
+    function isValidLikeReaction(data) {
       return data.keys().hasAll(['kind', 'targetId', 'authorUid', 'createdAt']) &&
              data.keys().size() <= 4 &&
              data.kind is string &&
@@ -183,8 +183,7 @@ service cloud.firestore {
              isValidId(data.targetId) &&
              data.authorUid is string &&
              data.authorUid == request.auth.uid &&
-             data.createdAt is string && data.createdAt.size() <= 64 &&
-             reactionId == data.kind + '_' + data.targetId + '_' + request.auth.uid;
+             data.createdAt is string && data.createdAt.size() <= 64;
     }
 
     function isValidDanceVideo(data) {
@@ -335,7 +334,7 @@ service cloud.firestore {
 
     match /like_reactions/{reactionId} {
       allow read: if true;
-      allow create: if isSignedIn() && isValidLikeReaction(request.resource.data, reactionId);
+      allow create: if isSignedIn() && isValidId(reactionId) && isValidLikeReaction(request.resource.data);
       allow update: if false;
       allow delete: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
     }
