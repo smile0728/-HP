@@ -68,13 +68,7 @@ export default function MusicPlayer() {
     }));
     setLikedByTrackId((prev) => ({ ...prev, [currentTrack.id]: nextLiked }));
 
-    toggleLikeReaction('music_track', currentTrack.id, nextLiked).catch(() => {
-      setLikedByTrackId((prev) => ({ ...prev, [currentTrack.id]: isLiked }));
-      setLikesByTrackId((prev) => ({
-        ...prev,
-        [currentTrack.id]: isLiked ? (prev[currentTrack.id] ?? currentTrack.likes) + 1 : Math.max((prev[currentTrack.id] ?? 0) - 1, 0)
-      }));
-    });
+    toggleLikeReaction('music_track', currentTrack.id, nextLiked).catch((error) => console.warn('Could not persist music like', error));
   };
 
   const stepTrack = (delta: number) => {

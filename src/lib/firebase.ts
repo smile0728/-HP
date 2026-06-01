@@ -576,6 +576,15 @@ function getLikeReactionId(kind: LikeKind, targetId: string, uid: string) {
   return `${kind}_${targetId}_${uid}`;
 }
 
+function getLocalLikeClientId() {
+  const key = 'alohaz_like_client_id';
+  const stored = localStorage.getItem(key);
+  if (stored) return stored;
+  const generated = `client-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
+  localStorage.setItem(key, generated);
+  return generated;
+}
+
 export const logTelemetryEvent = async (type: keyof Omit<DailyStat, 'id'>) => {
   const todayStr = new Date().toISOString().split('T')[0];
   if (isMockFirebase) {
@@ -761,8 +770,7 @@ export const getLikeEngagement = async (
     return { counts, liked };
   }
 
-  const user = await ensureFanUser();
-  const uid = user?.uid || '';
+  const uid = getLocalLikeClientId();
 
   try {
     const snapshot = await getDocs(query(collection(db, 'like_reactions'), where('kind', '==', kind)));
@@ -804,23 +812,35 @@ export const toggleLikeReaction = async (
     return false;
   }
 
-  const user = await ensureFanUser();
-  if (!user) throw new Error('いいね保存用の匿名アカウントを作成できませんでした。');
-
-  const id = getLikeReactionId(kind, targetId, user.uid);
+  const uid = getLocalLikeClientId();
+  const id = getLikeReactionId(kind, targetId, uid);
   const reactionRef = doc(db, 'like_reactions', id);
 
   if (shouldLike) {
-    await setDoc(reactionRef, {
+    const reaction = {
       kind,
       targetId,
-      authorUid: user.uid,
+      authorUid: uid,
       createdAt: new Date().toISOString()
-    });
+    };
+    try {
+      await setDoc(reactionRef, reaction);
+    } catch (error) {
+      const reactions = getLocalStorageData<LikeReaction>('like_reactions', []);
+      if (!reactions.some((item) => item.id === id)) {
+        reactions.push({ id, ...reaction });
+      }
+      saveLocalStorageData('like_reactions', reactions);
+    }
     return true;
   }
 
-  await deleteDoc(reactionRef);
+  try {
+    await deleteDoc(reactionRef);
+  } catch (error) {
+    const reactions = getLocalStorageData<LikeReaction>('like_reactions', []);
+    saveLocalStorageData('like_reactions', reactions.filter((item) => item.id !== id));
+  }
   return false;
 };
 

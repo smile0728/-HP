@@ -217,13 +217,7 @@ export default function App() {
 
     import('./lib/firebase')
       .then(({ toggleLikeReaction }) => toggleLikeReaction('dance_video', videoId, nextLiked))
-      .catch(() => {
-        setHasLikedVideo((prev) => ({ ...prev, [videoId]: prevLiked }));
-        setVideoLikes((prev) => ({
-          ...prev,
-          [videoId]: prevLiked ? (prev[videoId] ?? activeVideo.heartsCount) + 1 : Math.max((prev[videoId] ?? 0) - 1, 0)
-        }));
-      });
+      .catch((error) => console.warn('Could not persist video like', error));
   };
 
   const handleSnsClick = () => {
