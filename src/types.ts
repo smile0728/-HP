@@ -62,10 +62,12 @@ export interface DiaryEntry {
 export interface FanComment {
   id: string;
   diaryId: string;
+  authorUid?: string;
   userName: string;
   avatarSeed: string; // for random cute color/pfp
   content: string;
   timestamp: string;
+  createdAt?: string;
   stickyColor: 'pink' | 'yellow' | 'orange' | 'green' | 'blue';
 }
 

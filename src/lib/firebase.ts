@@ -25,7 +25,7 @@ import {
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DANCE_VIDEOS, MEMBERS } from '../data';
-import { DanceVideo, MemberProfile, MusicTrack, SiteImages } from '../types';
+import { DanceVideo, FanComment, MemberProfile, MusicTrack, SiteImages } from '../types';
 import { toYouTubeThumbnailUrl } from './youtube';
 
 // Recognize if setup is using mocked keys
@@ -128,6 +128,29 @@ const DEFAULT_MUSIC_TRACKS: MusicTrack[] = [
     likes: 128,
     visible: true,
     sortOrder: 2,
+  }
+];
+
+const DEFAULT_FAN_COMMENTS: FanComment[] = [
+  {
+    id: 'c1',
+    diaryId: 'diary-1',
+    userName: 'りょーた🌻あろ厨',
+    avatarSeed: '1',
+    content: '交換日記スタートうれしすぎる！！毎日楽しみに見にきます！すまいるちゃんのハイテンションな文章元気でる！🧡',
+    timestamp: '2026/05/24 18:22',
+    createdAt: '2026-05-24T18:22:00+09:00',
+    stickyColor: 'orange'
+  },
+  {
+    id: 'c2',
+    diaryId: 'diary-2',
+    userName: 'みゆきゃるめんラテコ',
+    avatarSeed: '2',
+    content: 'きゃるめんちゃん可愛い…🧸 いちごタルトになりたかった。明日早起きふぁいとぉ！',
+    timestamp: '2026/05/25 00:05',
+    createdAt: '2026-05-25T00:05:00+09:00',
+    stickyColor: 'pink'
   }
 ];
 
@@ -613,6 +636,91 @@ export const getDailyStats = async (): Promise<DailyStat[]> => {
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, path);
     return [];
+  }
+};
+
+// ----------------------------------------------------
+// SHARED FAN DIARY COMMENTS
+// ----------------------------------------------------
+export const getFanComments = async (): Promise<FanComment[]> => {
+  if (isMockFirebase) {
+    return getLocalStorageData<FanComment>('fan_comments', DEFAULT_FAN_COMMENTS);
+  }
+
+  const path = 'fan_comments';
+  try {
+    const snapshot = await getDocs(collection(db, path));
+    const items: FanComment[] = [];
+    snapshot.forEach((commentDoc) => {
+      const data = commentDoc.data();
+      const stickyColor = ['pink', 'yellow', 'orange', 'green', 'blue'].includes(data.stickyColor)
+        ? data.stickyColor
+        : 'pink';
+      items.push({
+        id: commentDoc.id,
+        diaryId: typeof data.diaryId === 'string' ? data.diaryId : '',
+        authorUid: typeof data.authorUid === 'string' ? data.authorUid : undefined,
+        userName: typeof data.userName === 'string' ? data.userName : '匿名さん',
+        avatarSeed: typeof data.avatarSeed === 'string' ? data.avatarSeed : commentDoc.id,
+        content: typeof data.content === 'string' ? data.content : '',
+        timestamp: typeof data.timestamp === 'string' ? data.timestamp : '',
+        createdAt: typeof data.createdAt === 'string' ? data.createdAt : undefined,
+        stickyColor
+      });
+    });
+    return items
+      .filter((item) => item.diaryId && item.content)
+      .sort((a, b) => (b.createdAt || b.timestamp || '').localeCompare(a.createdAt || a.timestamp || ''));
+  } catch (error) {
+    console.warn('Could not load shared fan comments, using local storage fallback', error);
+    return getLocalStorageData<FanComment>('fan_comments', DEFAULT_FAN_COMMENTS);
+  }
+};
+
+export const saveFanComment = async (comment: FanComment): Promise<FanComment> => {
+  const createdAt = comment.createdAt || new Date().toISOString();
+  const normalized: FanComment = {
+    ...comment,
+    userName: comment.userName.slice(0, 20),
+    content: comment.content.slice(0, 120),
+    createdAt
+  };
+
+  if (isMockFirebase) {
+    const comments = getLocalStorageData<FanComment>('fan_comments', DEFAULT_FAN_COMMENTS);
+    saveLocalStorageData('fan_comments', [normalized, ...comments.filter((item) => item.id !== normalized.id)]);
+    return normalized;
+  }
+
+  const user = await ensureFanUser();
+  const authorUid = user?.uid || '';
+  const commentWithAuthor = {
+    ...normalized,
+    authorUid
+  };
+  const path = `fan_comments/${commentWithAuthor.id}`;
+
+  try {
+    await setDoc(doc(db, 'fan_comments', commentWithAuthor.id), commentWithAuthor);
+    return commentWithAuthor;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+    throw error;
+  }
+};
+
+export const deleteFanComment = async (comment: FanComment): Promise<void> => {
+  if (isMockFirebase) {
+    const comments = getLocalStorageData<FanComment>('fan_comments', DEFAULT_FAN_COMMENTS);
+    saveLocalStorageData('fan_comments', comments.filter((item) => item.id !== comment.id));
+    return;
+  }
+
+  const path = `fan_comments/${comment.id}`;
+  try {
+    await deleteDoc(doc(db, 'fan_comments', comment.id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 };
 

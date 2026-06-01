@@ -12,18 +12,21 @@ const COLOR_STYLES = {
   blue: 'bg-sky-100 border-sky-300 text-sky-800 rotate-[1deg]',
 };
 
-import { getDiaries } from '../lib/firebase';
+import { deleteFanComment, ensureFanUser, getDiaries, getFanComments, saveFanComment } from '../lib/firebase';
 
 export default function ExchangeDiary() {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<string>('');
   const [comments, setComments] = useState<FanComment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [currentFanUid, setCurrentFanUid] = useState('');
   
   // Custom Input Fields for Guestbook
   const [nickname, setNickname] = useState('');
   const [bgColor, setBgColor] = useState<'pink' | 'yellow' | 'orange' | 'green' | 'blue'>('pink');
   const [bodyText, setBodyText] = useState('');
+  const [commentError, setCommentError] = useState('');
 
   // Fetch from Firebase/Store
   useEffect(() => {
@@ -44,67 +47,69 @@ export default function ExchangeDiary() {
   const activeEntry = entries.find((e) => e.id === selectedEntryId) || entries[0] || null;
 
 
-  // Retrieve comments on mount
   useEffect(() => {
-    const saved = localStorage.getItem('alohaz_diary_comments');
-    if (saved) {
+    let mounted = true;
+    const loadComments = async () => {
       try {
-        setComments(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse comments', e);
+        const fanUser = await ensureFanUser();
+        if (mounted) setCurrentFanUid(fanUser?.uid || '');
+        const sharedComments = await getFanComments();
+        if (mounted) setComments(sharedComments);
+      } catch (error) {
+        console.error('Failed to load shared comments', error);
+      } finally {
+        if (mounted) setCommentsLoading(false);
       }
-    } else {
-      // Seed initial fan comments
-      const initComments: FanComment[] = [
-        {
-          id: 'c1',
-          diaryId: 'diary-1',
-          userName: 'りょーた🌻あろ厨',
-          avatarSeed: '1',
-          content: '交換日記スタートうれしすぎる！！毎日楽しみに見にきます！すまいるちゃんのハイテンションな文章元気でる！🧡',
-          timestamp: '2026/05/24 18:22',
-          stickyColor: 'orange'
-        },
-        {
-          id: 'c2',
-          diaryId: 'diary-2',
-          userName: 'みゆきゃるめんラテコ',
-          avatarSeed: '2',
-          content: 'きゃるめんちゃん可愛い…🧸 いちごタルトになりたかった。明日早起きふぁいとぉ！',
-          timestamp: '2026/05/25 00:05',
-          stickyColor: 'pink'
-        }
-      ];
-      setComments(initComments);
-      localStorage.setItem('alohaz_diary_comments', JSON.stringify(initComments));
-    }
+    };
+    loadComments();
+    return () => {
+      mounted = false;
+    };
   }, []);
-
-  const saveComments = (newComments: FanComment[]) => {
-    setComments(newComments);
-    localStorage.setItem('alohaz_diary_comments', JSON.stringify(newComments));
-  };
 
   const handleCreateComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nickname.trim() || !bodyText.trim()) return;
+    const trimmedNickname = nickname.trim();
+    const trimmedBodyText = bodyText.trim();
+
+    if (!trimmedNickname && !trimmedBodyText) {
+      setCommentError('おなまえとメッセージを入力してね。');
+      return;
+    }
+    if (!trimmedNickname) {
+      setCommentError('おなまえを入力してね。');
+      return;
+    }
+    if (!trimmedBodyText) {
+      setCommentError('メッセージを入力してね。');
+      return;
+    }
 
     const newComment: FanComment = {
       id: `comment-${Date.now()}`,
       diaryId: selectedEntryId,
-      userName: nickname.trim(),
+      userName: trimmedNickname,
       avatarSeed: Math.random().toString(),
-      content: bodyText.trim(),
+      content: trimmedBodyText,
       timestamp: new Date().toLocaleString('ja-JP', { hour12: false }).slice(0, 16),
+      createdAt: new Date().toISOString(),
       stickyColor: bgColor,
     };
 
-    const nextList = [newComment, ...comments];
-    saveComments(nextList);
+    saveFanComment(newComment)
+      .then((savedComment) => {
+        setCurrentFanUid(savedComment.authorUid || currentFanUid);
+        setComments((prev) => [savedComment, ...prev.filter((comment) => comment.id !== savedComment.id)]);
+      })
+      .catch((error) => {
+        console.error('Failed to save shared comment', error);
+        setCommentError('コメントの保存に失敗しました。時間をおいてもう一度試してね。');
+      });
 
     // Reset fields
     setBodyText('');
     setNickname('');
+    setCommentError('');
 
     // Sparkle bip sound
     try {
@@ -121,10 +126,16 @@ export default function ExchangeDiary() {
     } catch (_) {}
   };
 
-  const deleteComment = (id: string) => {
+  const deleteComment = (comment: FanComment) => {
     if (!window.confirm('この付箋コメントを削除しますか？')) return;
-    const nextList = comments.filter((c) => c.id !== id);
-    saveComments(nextList);
+    deleteFanComment(comment)
+      .then(() => {
+        setComments((prev) => prev.filter((c) => c.id !== comment.id));
+      })
+      .catch((error) => {
+        console.error('Failed to delete shared comment', error);
+        setCommentError('コメントの削除に失敗しました。投稿した端末か管理者だけ削除できます。');
+      });
   };
 
   // Filter comments belonging to active notebook entry
@@ -265,8 +276,16 @@ export default function ExchangeDiary() {
               maxLength={20}
               placeholder="すまいる大好きマン"
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className="w-full text-xs px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-brand-orange focus:outline-none"
+              onChange={(e) => {
+                setNickname(e.target.value);
+                if (commentError) setCommentError('');
+              }}
+              aria-invalid={commentError && !nickname.trim() ? true : undefined}
+              className={`w-full text-xs px-3 py-2 border-2 rounded-lg focus:outline-none ${
+                commentError && !nickname.trim()
+                  ? 'border-rose-400 bg-rose-50 focus:border-rose-500'
+                  : 'border-stone-200 focus:border-brand-orange'
+              }`}
             />
           </div>
 
@@ -299,8 +318,16 @@ export default function ExchangeDiary() {
               maxLength={120}
               placeholder="かわいい！今日のダンス動画何回もリピートしてます！"
               value={bodyText}
-              onChange={(e) => setBodyText(e.target.value)}
-              className="w-full text-xs px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-brand-pink focus:outline-none"
+              onChange={(e) => {
+                setBodyText(e.target.value);
+                if (commentError) setCommentError('');
+              }}
+              aria-invalid={commentError && !bodyText.trim() ? true : undefined}
+              className={`w-full text-xs px-3 py-2 border-2 rounded-lg focus:outline-none ${
+                commentError && !bodyText.trim()
+                  ? 'border-rose-400 bg-rose-50 focus:border-rose-500'
+                  : 'border-stone-200 focus:border-brand-pink'
+              }`}
             />
           </div>
 
@@ -311,11 +338,20 @@ export default function ExchangeDiary() {
             <Send size={12} /> ペタッと貼る
           </button>
         </form>
+        {commentError && (
+          <p role="alert" className="-mt-4 mb-5 text-xs font-black text-rose-700 bg-rose-50 border-2 border-rose-200 rounded-xl px-3 py-2">
+            {commentError}
+          </p>
+        )}
 
         {/* Comment sticky notes list */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[300px] overflow-y-auto p-2 border-2 border-dashed border-dark-charcoal/10 rounded-xl bg-orange-50/10">
           <AnimatePresence>
-            {activeComments.length === 0 ? (
+            {commentsLoading ? (
+              <div className="col-span-full py-8 text-center text-xs text-stone-400 font-bold animate-pulse">
+                みんなのふせんを読み込み中です...
+              </div>
+            ) : activeComments.length === 0 ? (
               <div className="col-span-full py-8 text-center text-xs text-stone-400 font-bold">
                 まだ貼られたふせんはありません。最初の１枚を貼ってみてね！✏️
               </div>
@@ -348,12 +384,15 @@ export default function ExchangeDiary() {
 
                   {/* Sticky Footer actions */}
                   <div className="flex justify-end pt-1">
-                    <button
-                      onClick={() => deleteComment(com.id)}
-                      className="text-stone-500 hover:text-red-700 p-0.5 rounded hover:bg-black/5 opacity-40 hover:opacity-100 transition-opacity cursor-pointer flex items-center"
-                    >
-                      <Trash2 size={10} />
-                    </button>
+                    {(!com.authorUid || com.authorUid === currentFanUid) && (
+                      <button
+                        onClick={() => deleteComment(com)}
+                        aria-label="付箋コメントを削除"
+                        className="text-stone-500 hover:text-red-700 p-0.5 rounded hover:bg-black/5 opacity-40 hover:opacity-100 transition-opacity cursor-pointer flex items-center"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               ))

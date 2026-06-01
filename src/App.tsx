@@ -27,6 +27,12 @@ import { toYouTubeEmbedUrl, toYouTubeThumbnailUrl } from './lib/youtube';
 // Site images served from public/
 const MainVisualImg = "/picture/main-visual.png";
 const LogoImg = "/picture/logo.svg";
+const OFFICIAL_LINKS = {
+  youtube: 'https://www.youtube.com/@aloha-z_0728',
+  instagram: 'https://www.instagram.com/oamebiyori/',
+  niconico: 'https://www.nicovideo.jp/mylist/69049323',
+  x: 'https://x.com/aloha_z_0728?s=20',
+};
 const Announcements = lazy(() => import('./components/Announcements'));
 const ExchangeDiary = lazy(() => import('./components/ExchangeDiary'));
 const FortuneGame = lazy(() => import('./components/FortuneGame'));
@@ -203,6 +209,12 @@ export default function App() {
         osc.stop(audioCtx.currentTime + 0.2);
       } catch (_) {}
     }
+  };
+
+  const handleSnsClick = () => {
+    import('./lib/firebase')
+      .then(({ logTelemetryEvent }) => logTelemetryEvent('snsClicks'))
+      .catch(() => {});
   };
 
   if (currentPath.startsWith('/admin')) {
@@ -422,19 +434,19 @@ export default function App() {
                 <span className="text-[10px] font-mono text-zinc-500 block mb-3 font-semibold tracking-wider">CONNECT WITH US!（公式リンク）</span>
                 <div className="flex flex-wrap gap-2.5 justify-center lg:justify-start">
                   
-                  <a href="#youtube" className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-[#FF0000] hover:bg-rose-600 text-white font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
+                  <a href={OFFICIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" onClick={handleSnsClick} className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-[#FF0000] hover:bg-rose-600 text-white font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
                     <Youtube size={14} fill="currentColor" /> YouTube
                   </a>
 
-                  <a href="#instagram" className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-gradient-to-tr from-[#FD1D1D] to-[#E1306C] hover:opacity-95 text-white font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
+                  <a href={OFFICIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" onClick={handleSnsClick} className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-gradient-to-tr from-[#FD1D1D] to-[#E1306C] hover:opacity-95 text-white font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
                     <Instagram size={14} /> Instagram
                   </a>
 
-                  <a href="#tiktok" className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-[#000000] hover:bg-zinc-800 text-white font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
-                    <Tv size={14} /> TikTok
+                  <a href={OFFICIAL_LINKS.niconico} target="_blank" rel="noopener noreferrer" onClick={handleSnsClick} className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-[#252525] hover:bg-zinc-800 text-white font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
+                    <Tv size={14} /> ニコニコ
                   </a>
 
-                  <a href="#x" className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-zinc-850 bg-stone-100 hover:bg-stone-200 text-dark-charcoal font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
+                  <a href={OFFICIAL_LINKS.x} target="_blank" rel="noopener noreferrer" onClick={handleSnsClick} className="px-3.5 py-2 rounded-xl border-2 border-dark-charcoal bg-zinc-850 bg-stone-100 hover:bg-stone-200 text-dark-charcoal font-black text-xs flex items-center gap-1.5 shadow-[2px_2px_0_#4A3E3D] transition-all transform active:translate-y-0.5">
                     <Twitter size={14} fill="currentColor" /> X
                   </a>
                   

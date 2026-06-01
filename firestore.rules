@@ -25,6 +25,10 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isValidDateId(id) {
+      return id is string && id.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
     // Entities Validations
     function isValidPhoto(data) {
       return data.keys().hasAll(['id', 'imageUrl', 'title', 'date', 'visible']) &&
@@ -100,14 +104,47 @@ service cloud.firestore {
              (!data.keys().hasAny(['createdAt']) || (data.createdAt is string && data.createdAt.size() <= 64));
     }
 
+    function isValidStatValue(value) {
+      return value is int && value >= 0 && value <= 1000000;
+    }
+
     function isValidDailyStat(data) {
-      return data.keys().size() <= 8 &&
-             (!data.keys().hasAny(['pageViews']) || data.pageViews is int) &&
-             (!data.keys().hasAny(['fortunesDrawn']) || data.fortunesDrawn is int) &&
-             (!data.keys().hasAny(['completions']) || data.completions is int) &&
-             (!data.keys().hasAny(['galleryViews']) || data.galleryViews is int) &&
-             (!data.keys().hasAny(['snsClicks']) || data.snsClicks is int) &&
-             (!data.keys().hasAny(['videoClicks']) || data.videoClicks is int);
+      return data.keys().hasOnly(['pageViews', 'fortunesDrawn', 'completions', 'galleryViews', 'snsClicks', 'videoClicks']) &&
+             (!data.keys().hasAny(['pageViews']) || isValidStatValue(data.pageViews)) &&
+             (!data.keys().hasAny(['fortunesDrawn']) || isValidStatValue(data.fortunesDrawn)) &&
+             (!data.keys().hasAny(['completions']) || isValidStatValue(data.completions)) &&
+             (!data.keys().hasAny(['galleryViews']) || isValidStatValue(data.galleryViews)) &&
+             (!data.keys().hasAny(['snsClicks']) || isValidStatValue(data.snsClicks)) &&
+             (!data.keys().hasAny(['videoClicks']) || isValidStatValue(data.videoClicks));
+    }
+
+    function isSingleInitialStatCreate(data) {
+      return isValidDailyStat(data) &&
+             data.keys().size() == 1 &&
+             ((!data.keys().hasAny(['pageViews']) || data.pageViews == 1) &&
+              (!data.keys().hasAny(['fortunesDrawn']) || data.fortunesDrawn == 1) &&
+              (!data.keys().hasAny(['completions']) || data.completions == 1) &&
+              (!data.keys().hasAny(['galleryViews']) || data.galleryViews == 1) &&
+              (!data.keys().hasAny(['snsClicks']) || data.snsClicks == 1) &&
+              (!data.keys().hasAny(['videoClicks']) || data.videoClicks == 1));
+    }
+
+    function isSingleStatIncrement(data, oldData) {
+      return isValidDailyStat(data) &&
+             data.diff(oldData).affectedKeys().hasOnly(['pageViews', 'fortunesDrawn', 'completions', 'galleryViews', 'snsClicks', 'videoClicks']) &&
+             data.diff(oldData).affectedKeys().size() == 1 &&
+             (!data.diff(oldData).affectedKeys().hasAny(['pageViews']) ||
+               data.pageViews == (oldData.keys().hasAny(['pageViews']) ? oldData.pageViews + 1 : 1)) &&
+             (!data.diff(oldData).affectedKeys().hasAny(['fortunesDrawn']) ||
+               data.fortunesDrawn == (oldData.keys().hasAny(['fortunesDrawn']) ? oldData.fortunesDrawn + 1 : 1)) &&
+             (!data.diff(oldData).affectedKeys().hasAny(['completions']) ||
+               data.completions == (oldData.keys().hasAny(['completions']) ? oldData.completions + 1 : 1)) &&
+             (!data.diff(oldData).affectedKeys().hasAny(['galleryViews']) ||
+               data.galleryViews == (oldData.keys().hasAny(['galleryViews']) ? oldData.galleryViews + 1 : 1)) &&
+             (!data.diff(oldData).affectedKeys().hasAny(['snsClicks']) ||
+               data.snsClicks == (oldData.keys().hasAny(['snsClicks']) ? oldData.snsClicks + 1 : 1)) &&
+             (!data.diff(oldData).affectedKeys().hasAny(['videoClicks']) ||
+               data.videoClicks == (oldData.keys().hasAny(['videoClicks']) ? oldData.videoClicks + 1 : 1));
     }
 
     function isValidGachaState(data) {
@@ -118,6 +155,24 @@ service cloud.firestore {
              data.collection is list && data.collection.size() <= 100 &&
              data.visitorName is string && data.visitorName.size() <= 30 &&
              (!data.keys().hasAny(['updatedAt']) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidFanComment(data) {
+      return data.keys().hasAll(['diaryId', 'authorUid', 'userName', 'avatarSeed', 'content', 'timestamp', 'stickyColor', 'createdAt']) &&
+             data.keys().size() <= 8 &&
+             data.diaryId is string && data.diaryId.size() <= 128 &&
+             data.authorUid is string && data.authorUid == request.auth.uid &&
+             data.userName is string && data.userName.size() >= 1 && data.userName.size() <= 20 &&
+             data.avatarSeed is string && data.avatarSeed.size() <= 128 &&
+             data.content is string && data.content.size() >= 1 && data.content.size() <= 120 &&
+             data.timestamp is string && data.timestamp.size() <= 32 &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             data.stickyColor is string &&
+             (data.stickyColor == 'pink' ||
+              data.stickyColor == 'yellow' ||
+              data.stickyColor == 'orange' ||
+              data.stickyColor == 'green' ||
+              data.stickyColor == 'blue');
     }
 
     function isValidDanceVideo(data) {
@@ -245,8 +300,10 @@ service cloud.firestore {
     }
 
     match /daily_stats/{dateStr} {
-      allow read: if true;
-      allow create, update: if isValidDailyStat(request.resource.data) && isValidId(dateStr);
+      allow read: if isAdmin();
+      allow create: if isValidDateId(dateStr) && isSingleInitialStatCreate(request.resource.data);
+      allow update: if isValidDateId(dateStr) && isSingleStatIncrement(request.resource.data, resource.data);
+      allow delete: if isAdmin();
     }
 
     match /users/{userId}/gacha/{stateId} {
@@ -255,6 +312,13 @@ service cloud.firestore {
         stateId == 'state' &&
         isValidGachaState(request.resource.data);
       allow delete: if isOwner(userId) && stateId == 'state';
+    }
+
+    match /fan_comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(commentId) && isValidFanComment(request.resource.data);
+      allow update: if false;
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
     }
 
     match /admins/{userId} {

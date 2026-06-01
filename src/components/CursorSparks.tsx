@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface Spark {
   id: number;
+  createdAt: number;
   x: number;
   y: number;
   character: string;
@@ -21,7 +22,7 @@ export default function CursorSparks() {
     let sparkId = 0;
 
     const handleClick = (e: MouseEvent) => {
-      // Burst multiple shapes!
+      const createdAt = Date.now();
       const burst: Spark[] = [];
       for (let i = 0; i < 6; i++) {
         const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
@@ -31,6 +32,7 @@ export default function CursorSparks() {
 
         burst.push({
           id: sparkId++,
+          createdAt,
           x: e.clientX,
           y: e.clientY + window.scrollY,
           character: shape,
@@ -49,12 +51,12 @@ export default function CursorSparks() {
     };
   }, []);
 
-  // Clean up sparks after their animation duration
   useEffect(() => {
     if (sparks.length === 0) return;
     const interval = setInterval(() => {
-      setSparks((prev) => prev.filter((s) => Date.now() - s.id * 10 < 1200));
-    }, 500);
+      const now = Date.now();
+      setSparks((prev) => prev.filter((spark) => now - spark.createdAt < 1200));
+    }, 300);
     return () => clearInterval(interval);
   }, [sparks]);
 

@@ -359,6 +359,7 @@ Google Fonts から以下を読み込む。
 - おみくじ: `getFortunes`, `saveFortune`, `deleteFortune`
 - 手紙: `getLetters`, `saveLetter`, `deleteLetter`
 - 統計: `logTelemetryEvent`, `getDailyStats`
+- 共有コメント: `getFanComments`, `saveFanComment`, `deleteFanComment`
 - ファン用ガチャ状態: `ensureFanUser`, `getUserGachaState`, `saveUserGachaState`
 
 Firebase がモック設定、または Firestore 読み込みに失敗した場合は `alohaz_firestore_` 接頭辞の `localStorage` データを使用する。
@@ -370,7 +371,8 @@ Firebase がモック設定、または Firestore 読み込みに失敗した場
   - `/src/assets/images/alohaz_main_1779675458356.png`
   - `/src/assets/images/alohaz_logo_1779675480937.png`
 - 外部画像:
-  - `picsum.photos` の動画サムネイル、ギャラリー画像
+  - `picsum.photos` のギャラリー画像
+  - YouTube サムネイル画像
 - 外部フォント:
   - Google Fonts
 - Firebase:
@@ -388,18 +390,20 @@ Firebase がモック設定、または Firestore 読み込みに失敗した場
 ## セキュリティとプライバシー
 
 - ユーザー入力は React の通常レンダリングで表示されるため、HTML としては解釈されない。
-- コメント、訪問者名はブラウザ内にのみ保存される。
+- コメントは共有掲示板として Firestore に保存され、公開表示される。
+- 訪問者名はブラウザ内と本人の匿名UID配下のガチャ状態に保存される。
 - 管理画面は Firebase Authentication の Google ログインで保護する。
 - ファン向けガチャ保存は Firebase Authentication の匿名ログインで UID を発行する。
 - Firestore ルールでは `admins/{uid}` の存在で管理者判定を行い、管理者メールはコードにもルールにも含めない。
 - 初期管理者は Firebase Console などから `admins/{uid}` を作成して登録する必要がある。
 - `admins/{uid}` は本人または管理者が個別取得でき、一覧取得と書き込みは管理者に限定する。
 - `users/{uid}/gacha/state` は `request.auth.uid == uid` の本人だけが読み書きできる。
+- `fan_comments/{commentId}` は誰でも読める。作成は匿名ログイン済みユーザーに限定し、削除は投稿者本人または管理者に限定する。
 - Firebase の API キーはクライアント設定として含まれるため、アクセス制御は Firestore ルール側で担保する。
 
 ## 実装上の注意点
 
 - Vite の `server.hmr` は `DISABLE_HMR` 環境変数で制御される。
 - `vite.config.ts` には `@` エイリアスがプロジェクトルートとして定義されている。
-- `metadata.json` には Gemini API の capability が記載されているが、現状の画面コードでは Gemini 呼び出しは確認できない。
-- `react-router-dom` は依存に追加されているが、現状のルーティングは `window.location.pathname` と `history.pushState` による簡易実装である。
+- `metadata.json` に Gemini API capability は設定しない。現状の画面コードでは Gemini 呼び出しを行わない。
+- ルーティングは `window.location.pathname` と `history.pushState` による簡易実装である。

@@ -72,6 +72,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const ADMIN_BUILD_MARKER = 'admin-auth-debug-2026-05-25-2';
 const MAX_FORTUNE_COUNT = 20;
+type AdminNotice = { type: 'success' | 'error'; message: string } | null;
 
 export default function AdminPanel() {
   const [user, setUser] = useState<User | null>(null);
@@ -79,6 +80,7 @@ export default function AdminPanel() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isSimulatedAdmin, setIsSimulatedAdmin] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [adminNotice, setAdminNotice] = useState<AdminNotice>(null);
 
   // Tab navigation
   const [activeTab, setActiveTab] = useState<'dashboard' | 'assets' | 'announcements' | 'diary' | 'photos' | 'gacha' | 'letters' | 'videos' | 'music' | 'profiles'>('dashboard');
@@ -108,6 +110,16 @@ export default function AdminPanel() {
   const [editingVideo, setEditingVideo] = useState<Partial<DanceVideo> | null>(null);
   const [editingMusicTrack, setEditingMusicTrack] = useState<Partial<MusicTrack> | null>(null);
   const [editingProfile, setEditingProfile] = useState<Partial<MemberProfile> & { likesText?: string; dislikesText?: string } | null>(null);
+
+  const showAdminNotice = (type: 'success' | 'error', message: string) => {
+    setAdminNotice({ type, message });
+  };
+
+  useEffect(() => {
+    if (!adminNotice) return;
+    const timerId = window.setTimeout(() => setAdminNotice(null), 5000);
+    return () => window.clearTimeout(timerId);
+  }, [adminNotice]);
 
   // Auth subscriber
   useEffect(() => {
@@ -164,8 +176,10 @@ export default function AdminPanel() {
       setProfiles(pr);
       setSiteImages(si);
       setStats(s);
+      showAdminNotice('success', '最新データに同期しました。');
     } catch (err) {
       console.error("Could not fetch admin datasets:", err);
+      showAdminNotice('error', 'データの読み込みに失敗しました。Firestoreルールや通信状態を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -412,7 +426,7 @@ export default function AdminPanel() {
   const handleSaveAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAnnouncement?.title || !editingAnnouncement?.date || !editingAnnouncement?.content) {
-      alert("全項目（日付・お知らせタイトル・掲載内容）を入力してね！🌻");
+      showAdminNotice('error', "全項目（日付・お知らせタイトル・掲載内容）を入力してね！🌻");
       return;
     }
     await saveAnnouncement({
@@ -438,7 +452,7 @@ export default function AdminPanel() {
   const handleSaveDiary = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDiary?.title || !editingDiary?.date || !editingDiary?.content) {
-      alert("全項目（ノート日付・タイトル・本文）をきちんと入力してね！🧸");
+      showAdminNotice('error', "全項目（ノート日付・タイトル・本文）をきちんと入力してね！🧸");
       return;
     }
     await saveDiary({
@@ -467,7 +481,7 @@ export default function AdminPanel() {
   const handleSavePhoto = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPhoto?.title || !editingPhoto?.imageUrl || !editingPhoto?.comment) {
-      alert("すべての項目（日付・写真タイトル・画像アドレス・コメント）を入力してください！📸");
+      showAdminNotice('error', "すべての項目（日付・写真タイトル・画像アドレス・コメント）を入力してください！📸");
       return;
     }
     await savePhoto({
@@ -494,12 +508,12 @@ export default function AdminPanel() {
   const handleSaveFortune = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingFortune?.id || !editingFortune?.resultName || !editingFortune?.resultMessage) {
-      alert("必須項目（みくじ固有ID・運勢結果・解説文）を入力してね！🔮");
+      showAdminNotice('error', "必須項目（みくじ固有ID・運勢結果・解説文）を入力してね！🔮");
       return;
     }
     const isNewFortune = !fortunes.some((item) => item.id === editingFortune.id);
     if (isNewFortune && fortunes.length >= MAX_FORTUNE_COUNT) {
-      alert(`おみくじは最大${MAX_FORTUNE_COUNT}件まで登録できます。不要な項目を削除してから追加してください。`);
+      showAdminNotice('error', `おみくじは最大${MAX_FORTUNE_COUNT}件まで登録できます。不要な項目を削除してから追加してください。`);
       return;
     }
     await saveFortune({
@@ -536,7 +550,7 @@ export default function AdminPanel() {
   const handleSaveLetter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingLetter?.id || !editingLetter?.smileContent || !editingLetter?.caramelContent) {
-      alert("必須項目（対象シーズン・すまいるレター・きゃるめんレター）は省略できません！💌");
+      showAdminNotice('error', "必須項目（対象シーズン・すまいるレター・きゃるめんレター）は省略できません！💌");
       return;
     }
     await saveLetter({
@@ -563,7 +577,7 @@ export default function AdminPanel() {
   const handleSaveVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingVideo?.id || !editingVideo?.youtubeUrl || !editingVideo?.description) {
-      alert("動画ID、YouTubeリンク、説明文は必須です。");
+      showAdminNotice('error', "動画ID、YouTubeリンク、説明文は必須です。");
       return;
     }
     await saveDanceVideo({
@@ -590,7 +604,7 @@ export default function AdminPanel() {
   const handleSaveMusicTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMusicTrack?.id || !editingMusicTrack?.youtubeUrl || !editingMusicTrack?.description) {
-      alert("トラックID、YouTubeリンク、説明文は必須です。");
+      showAdminNotice('error', "トラックID、YouTubeリンク、説明文は必須です。");
       return;
     }
     await saveMusicTrack({
@@ -626,7 +640,7 @@ export default function AdminPanel() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProfile?.id || !editingProfile?.name || !editingProfile?.jpName) {
-      alert("メンバーID、英字名、日本語名は必須です。");
+      showAdminNotice('error', "メンバーID、英字名、日本語名は必須です。");
       return;
     }
     try {
@@ -648,10 +662,10 @@ export default function AdminPanel() {
       });
       setEditingProfile(null);
       await refreshData();
-      alert('自己紹介を保存しました。');
+      showAdminNotice('success', '自己紹介を保存しました。');
     } catch (error) {
       console.error('Could not save member profile:', error);
-      alert('自己紹介の保存に失敗しました。Firestoreルールや管理者権限を確認してください。');
+      showAdminNotice('error', '自己紹介の保存に失敗しました。Firestoreルールや管理者権限を確認してください。');
     }
   };
 
@@ -659,7 +673,7 @@ export default function AdminPanel() {
     e.preventDefault();
     await saveSiteImages(siteImages);
     refreshData();
-    alert('サイト画像設定を保存しました。');
+    showAdminNotice('success', 'サイト画像設定を保存しました。');
   };
 
   const handleUploadImageFile = async (
@@ -674,7 +688,7 @@ export default function AdminPanel() {
       const url = await uploadManagedImage(file, folder);
       onUploaded(url);
     } catch (error) {
-      alert(error instanceof Error ? error.message : '画像アップロードに失敗しました。');
+      showAdminNotice('error', error instanceof Error ? error.message : '画像アップロードに失敗しました。');
     } finally {
       setUploadingImageKey(null);
     }
@@ -685,6 +699,24 @@ export default function AdminPanel() {
   // -----------------------------------------------------------------
   return (
     <div className="min-h-screen bg-[#FDFBF7] selection:bg-brand-pink/20 font-sans text-dark-charcoal overflow-x-hidden">
+      <AnimatePresence>
+        {adminNotice && (
+          <motion.div
+            role="status"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className={`fixed top-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl border-2 px-4 py-3 text-xs font-black shadow-[4px_4px_0_#4A2C2A] ${
+              adminNotice.type === 'success'
+                ? 'border-emerald-700 bg-emerald-50 text-emerald-800'
+                : 'border-rose-700 bg-rose-50 text-rose-800'
+            }`}
+          >
+            {adminNotice.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Dynamic Dashboard Utility Bar */}
       <header className="bg-white border-b-4 border-dark-charcoal py-4 px-4 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs sticky top-0 z-30">
         <div className="flex items-center gap-2.5 min-w-0">

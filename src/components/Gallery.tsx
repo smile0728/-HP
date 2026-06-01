@@ -91,6 +91,25 @@ export default function Gallery() {
     });
   };
 
+  useEffect(() => {
+    if (selectedPhotoIndex === null) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedPhotoIndex(null);
+      }
+      if (event.key === 'ArrowLeft') {
+        handlePrev();
+      }
+      if (event.key === 'ArrowRight') {
+        handleNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPhotoIndex, photos.length]);
+
   const currentSelectedPhoto = selectedPhotoIndex !== null ? photos[selectedPhotoIndex] || photos[0] || null : null;
 
   return (
@@ -247,6 +266,7 @@ export default function Gallery() {
                 </div>
                 <button
                   onClick={() => setSelectedPhotoIndex(null)}
+                  aria-label="写真を閉じる"
                   className="p-1 rounded-full border-2 border-dark-charcoal bg-white hover:bg-stone-150 text-dark-charcoal transition-all cursor-pointer shadow-[2px_2px_0px_#4A2C2A]"
                 >
                   <X size={16} />
@@ -301,6 +321,7 @@ export default function Gallery() {
               <div className="flex justify-between items-center mt-5">
                 <button
                   onClick={handlePrev}
+                  aria-label="前の写真を見る"
                   className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-stone-50 border-2 border-dark-charcoal rounded-xl text-xs font-black text-dark-charcoal shadow-[2px_2px_0px_#4A2C2A] cursor-pointer"
                 >
                   <ChevronLeft size={14} /> 前へ
@@ -312,6 +333,7 @@ export default function Gallery() {
 
                 <button
                   onClick={handleNext}
+                  aria-label="次の写真を見る"
                   className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-stone-50 border-2 border-dark-charcoal rounded-xl text-xs font-black text-dark-charcoal shadow-[2px_2px_0px_#4A2C2A] cursor-pointer"
                 >
                   次へ <ChevronRight size={14} />
