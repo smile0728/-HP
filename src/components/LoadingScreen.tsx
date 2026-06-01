@@ -169,7 +169,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
               initial={{ opacity: 0, scale: 0.75 }}
               animate={{ opacity: 1, scale: [1, 1.08, 1] }}
               exit={{ opacity: 0 }}
-              className="h-56 w-full flex items-center justify-center text-center"
+              className="h-64 w-full flex items-center justify-center text-center"
             >
               <div className="relative w-full flex flex-col items-center">
                 <span className="absolute top-2 left-4 text-3xl animate-pulse">✨</span>
@@ -184,6 +184,9 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 </span>
                 <span className="block whitespace-nowrap text-[clamp(1.45rem,7vw,3rem)] leading-none font-display font-black text-brand-orange drop-shadow-[5px_5px_0_#4A3E3D]">
                   あろはーずです！！
+                </span>
+                <span className="block mt-3 text-xl sm:text-2xl font-sans font-black text-dark-charcoal bg-white border-2 border-dark-charcoal rounded-full px-5 py-1.5 shadow-[3px_3px_0_#4A3E3D]">
+                  よろしくお願いします！
                 </span>
               </div>
             </motion.div>
