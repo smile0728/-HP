@@ -7,6 +7,7 @@ import { ensureFanUser, getFortunes, getLetters, getUserGachaState, saveUserGach
 import { Award, RefreshCw, Sun, Heart, Gift, PlayCircle, Download, CheckCircle, BookOpen, Star, Sparkles, Mail, Lock, Unlock } from 'lucide-react';
 
 export default function FortuneGame() {
+  const isDevMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const [isPlaying, setIsPlaying] = useState(false);
   const [result, setResult] = useState<FortuneResult | null>(null);
   
@@ -800,13 +801,14 @@ ${visitorName || 'あなた'}がずっと笑顔でいられるように。
               )}
             </div>
             
-            {/* Quick dev restart button */}
-            <button
-              onClick={resetEntireGachaRecords}
-              className="mt-3 text-[9px] text-stone-400 hover:text-stone-600 font-semibold cursor-pointer underline hover:no-underline"
-            >
-              ※ テスト中の最初からコンプやり直し
-            </button>
+            {isDevMode && (
+              <button
+                onClick={resetEntireGachaRecords}
+                className="mt-3 text-[9px] text-stone-400 hover:text-stone-600 font-semibold cursor-pointer underline hover:no-underline"
+              >
+                ※ テスト中の最初からコンプやり直し
+              </button>
+            )}
           </div>
         </div>
 

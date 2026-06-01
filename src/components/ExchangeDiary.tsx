@@ -122,6 +122,7 @@ export default function ExchangeDiary() {
   };
 
   const deleteComment = (id: string) => {
+    if (!window.confirm('この付箋コメントを削除しますか？')) return;
     const nextList = comments.filter((c) => c.id !== id);
     saveComments(nextList);
   };

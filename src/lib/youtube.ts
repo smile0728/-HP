@@ -43,7 +43,17 @@ export function extractYouTubeVideoId(input: string): string | null {
 export function toYouTubeEmbedUrl(input: string): string {
   const id = extractYouTubeVideoId(input);
   if (!id) return input;
-  return `https://www.youtube.com/embed/${id}`;
+
+  const params = new URLSearchParams({
+    rel: '0',
+    playsinline: '1',
+  });
+
+  if (typeof window !== 'undefined' && window.location.origin) {
+    params.set('origin', window.location.origin);
+  }
+
+  return `https://www.youtube.com/embed/${id}?${params.toString()}`;
 }
 
 export function toYouTubeThumbnailUrl(input: string): string | null {
